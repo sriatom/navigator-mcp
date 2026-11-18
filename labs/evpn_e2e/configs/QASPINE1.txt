@@ -1,0 +1,174 @@
+!
+hostname QASPINE1
+!
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management console
+   idle-timeout 30
+!
+management api gnmi
+   transport grpc default
+      vrf M
+!
+management api netconf
+   transport ssh default
+      vrf M
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+!
+spanning-tree mode mstp
+!
+ip name-server vrf M 8.8.4.4
+ip name-server vrf M 8.8.8.8
+!
+service routing protocols model multi-agent
+!
+!
+interface Management0
+   description Out-of-Band/OOB Interface via CLAB
+   vrf M
+   ip address 172.31.11.110/24
+   exit
+!
+!
+ip route vrf M 0.0.0.0/0 172.31.11.1
+!
+ntp local-interface vrf M Management0
+ntp server vrf M 0.pool.ntp.org prefer
+ntp server vrf M 2.pool.ntp.org
+!
+interface Loopback0
+   description EVPN_Overlay_Peering
+   ip address 10.25.10.110/32
+   pim ipv4 sparse-mode
+!
+!
+interface Ethernet1
+   description SPINE1-LEAF1A
+   mtu 8216
+   no switchport
+   ip address 10.110.111.10/24
+   pim ipv4 sparse-mode
+   exit
+!
+interface Ethernet2
+   description SPINE1-LEAF1B
+   mtu 8216
+   no switchport
+   ip address 10.110.112.10/24
+   pim ipv4 sparse-mode
+   exit
+!
+interface Ethernet5
+   description SPINE1-QASVCL1A
+   mtu 8216
+   no switchport
+   ip address 10.110.131.10/24
+   pim ipv4 sparse-mode
+   exit
+!
+interface Ethernet6
+   description SPINE1-QASVCL1B
+   mtu 8216
+   no switchport
+   ip address 10.110.132.10/24
+   pim ipv4 sparse-mode
+   exit
+!
+!
+router general
+   router-id ipv4 10.25.10.110
+!
+router bgp 64000
+   no bgp default ipv4-unicast
+   maximum-paths 16 ecmp 16
+   distance bgp 20 200 200
+
+   neighbor UNDERLAY_PEERS peer group
+   neighbor UNDERLAY_PEERS bfd
+   neighbor UNDERLAY_PEERS send-community
+   neighbor UNDERLAY_PEERS maximum-routes 12000 warning-limit 75 percent warning-only
+
+   neighbor EVPN_OVERLAY_PEERS peer group
+   neighbor EVPN_OVERLAY_PEERS next-hop-unchanged
+   neighbor EVPN_OVERLAY_PEERS update-source Loopback0
+   neighbor EVPN_OVERLAY_PEERS ebgp-multihop 5
+   neighbor EVPN_OVERLAY_PEERS send-community
+   neighbor EVPN_OVERLAY_PEERS maximum-routes 1000
+
+   neighbor 10.110.111.100 peer group UNDERLAY_PEERS
+   neighbor 10.110.111.100 remote-as 64100
+   neighbor 10.110.111.100 description QALEAF1A
+
+   neighbor 10.25.10.111 peer group EVPN_OVERLAY_PEERS
+   neighbor 10.25.10.111 remote-as 64100
+   neighbor 10.25.10.111 description QALEAF1A
+
+   neighbor 10.110.112.100 peer group UNDERLAY_PEERS
+   neighbor 10.110.112.100 remote-as 64100
+   neighbor 10.110.112.100 description QALEAF1B
+
+   neighbor 10.25.10.112 peer group EVPN_OVERLAY_PEERS
+   neighbor 10.25.10.112 remote-as 64100
+   neighbor 10.25.10.112 description QALEAF1B
+
+   neighbor 10.110.131.100 peer group UNDERLAY_PEERS
+   neighbor 10.110.131.100 remote-as 64300
+   neighbor 10.110.131.100 description QASVCL1A
+
+   neighbor 10.25.10.131 peer group EVPN_OVERLAY_PEERS
+   neighbor 10.25.10.131 remote-as 64300
+   neighbor 10.25.10.131 description QASVCL1A
+
+   neighbor 10.110.132.100 peer group UNDERLAY_PEERS
+   neighbor 10.110.132.100 remote-as 64300
+   neighbor 10.110.132.100 description QASVCL1B
+
+   neighbor 10.25.10.132 peer group EVPN_OVERLAY_PEERS
+   neighbor 10.25.10.132 remote-as 64300
+   neighbor 10.25.10.132 description QASVCL1B
+   !
+   !
+   address-family evpn
+      neighbor EVPN_OVERLAY_PEERS activate
+   !
+   !
+   address-family ipv4
+      network 10.25.10.110/32
+      network 10.110.111.0/24
+      network 10.110.112.0/24
+      network 10.110.131.0/24
+      network 10.110.132.0/24
+      no neighbor EVPN_OVERLAY_PEERS activate
+      neighbor UNDERLAY_PEERS activate
+   !
+   exit
+!
+router multicast
+   ipv4
+      routing
+      software-forwarding kernel
+      multipath deterministic router-id
+   !
+!
+end

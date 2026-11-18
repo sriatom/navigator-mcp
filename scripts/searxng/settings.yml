@@ -1,0 +1,19 @@
+# SearXNG settings (only what differs from the defaults). secret_key is set by install_searxng.sh.
+use_default_settings: true
+
+general:
+  instance_name: "navigator-search"
+  enable_metrics: false
+
+server:
+  secret_key: "CHANGE_ME_BY_INSTALL"
+  limiter: false            # private, localhost-only instance: no bot limiter needed
+  image_proxy: false
+  public_instance: false
+
+search:
+  safe_search: 0
+  formats: [html, json]     # json is what NAVIGATOR and Hermes use
+
+ui:
+  query_in_title: false

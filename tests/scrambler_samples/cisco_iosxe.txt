@@ -1,0 +1,124 @@
+nyc-core-rtr1#show running-config
+Building configuration...
+!
+version 17.9
+hostname nyc-core-rtr1
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 9 $9$nhEmQVczB7dqsO$X.HsgL6x1il0RxkOSSvyQYwucySCt7qFm4v7pqCxkKM
+!
+aaa new-model
+aaa group server tacacs+ GLOBEX-ISE
+ server name ISE-NYC-01
+aaa authentication login default group GLOBEX-ISE local
+!
+username jsmith privilege 15 secret 9 $9$2MJBozw/9R3UsU$tJwoC8wBP0ghZ5nyWeuWsTOgSPwmBX5aoMOSJlP0hWg
+username admin privilege 15 password 7 0822455D0A16544541
+username engineer privilege 15 secret 5 $1$Xf2c$1d7VxhRHJw3b0PZ4HlpWS0
+!
+ip domain name corp.globex.com
+ip name-server 8.8.8.8 10.10.1.53
+!
+crypto pki trustpoint TP-self-signed-1234567
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-1234567
+!
+crypto pki certificate chain TP-self-signed-1234567
+ certificate self-signed 01
+  30820330 30820218 A0030201 02020101 300D0609 2A864886 F70D0101 05050030
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274
+  quit
+!
+license udi pid C8300-1N1S-6T sn FDO2531M0XY
+!
+key chain OSPF-KEYS
+ key 1
+  key-string 7 104D000A061843595F
+!
+crypto isakmp key 0 Gl0bexVPNkey! address 203.0.113.10
+crypto ikev2 keyring KR-AWS
+ peer AWS1
+  address 52.95.110.1
+  pre-shared-key local AwsLocalSecret123
+  pre-shared-key remote AwsRemoteSecret456
+!
+interface GigabitEthernet0/0/0
+ description WAN to Lumen circuit 441/KXFN/123456/LVLC - Globex NYC HQ
+ ip address 64.86.33.2 255.255.255.252
+ ip ospf message-digest-key 1 md5 7 0300540A0A1F0E18
+ standby 10 authentication md5 key-string 7 1511021F07257A767B
+!
+interface GigabitEthernet0/0/1
+ description Uplink to nyc-core-sw1 Gi1/0/48
+ ip address 10.10.0.1 255.255.255.252
+ ip ospf authentication-key 7 01100F175804
+ mac-address 0050.56a1.b2c3
+!
+interface Vlan100
+ description GLOBEX-USERS gateway
+ ip address 10.10.100.1 255.255.255.0
+ ipv6 address 2600:1f18:aaaa:12::1/64
+!
+router bgp 3356
+ bgp router-id 64.86.33.2
+ neighbor 64.86.33.1 remote-as 701
+ neighbor 64.86.33.1 password 7 05080F1C22431F5B4A
+ neighbor 10.10.0.2 remote-as 65010
+!
+ip access-list extended ACL-GLOBEX-MGMT
+ 10 remark Allow Jane Smith laptop
+ 20 permit tcp host 198.51.100.77 any eq 22
+!
+snmp-server community Gl0bexRO RO 10
+snmp-server community Gl0bexRW RW
+snmp-server location 1 Liberty Plaza, Floor 32, New York NY
+snmp-server contact noc@globex.com +1-212-555-0100
+snmp-server user snmpv3user GLOBEX-GRP v3 auth sha AuthPassw0rd priv aes 128 PrivPassw0rd
+snmp-server host 10.10.1.20 version 2c Gl0bexTRAP
+snmp-server host 10.10.1.21 vrf Mgmt-intf version 2c Gl0bexTRAP2
+!
+tacacs server ISE-NYC-01
+ address ipv4 10.10.1.30
+ key 7 0822455D0A165445415F59
+tacacs-server host 10.10.1.31 key 7 13061E010803557878
+radius-server key 7 08314D5D1A0E0A0516
+!
+ntp authentication-key 1 md5 13061E010803 7
+ntp server 129.6.15.28
+!
+banner motd ^C
+**************************************************
+* Globex Corporation - Authorized access only     *
+* Contact Jane Smith x4411                        *
+**************************************************
+^C
+!
+line vty 0 4
+ password 7 060506324F41
+ transport input ssh
+!
+end
+
+nyc-core-rtr1#show version | include board|uptime
+nyc-core-rtr1 uptime is 41 weeks, 2 days, 3 hours, 11 minutes
+Processor board ID FDO2531M0XY
+
+nyc-core-rtr1#show cdp neighbors detail
+-------------------------
+Device ID: nyc-core-sw1.corp.globex.com
+Entry address(es):
+  IP address: 10.10.0.2
+Platform: cisco C9500-48Y4C,  Capabilities: Router Switch IGMP
+Interface: GigabitEthernet0/0/1,  Port ID (outgoing port): TenGigabitEthernet1/0/48
+
+nyc-core-rtr1#show ip bgp
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  0.0.0.0          64.86.33.1               0             0 701 i
+ *>  23.6.0.0/16      64.86.33.1                             0 701 20940 i
+
+Oct 11 10:01:22 nyc-core-rtr1 %SEC_LOGIN-5-LOGIN_SUCCESS: Login Success [user: jsmith] [Source: 10.10.50.9] [localport: 22] at 10:01:22 EDT Sat Oct 11 2026
+Oct 11 10:02:13 nyc-core-rtr1 %SYS-5-CONFIG_I: Configured from console by jsmith on vty0 (10.10.50.9)
+Oct 11 10:05:40 nyc-core-rtr1 %BGP-5-ADJCHANGE: neighbor 64.86.33.1 Down BGP Notification sent
+Oct 11 10:06:01 nyc-core-rtr1 %SW_MATM-4-MACFLAP_NOTIF: Host 0050.56a1.b2c3 in vlan 100 is flapping between port Gi0/0/1 and port Gi0/0/2.

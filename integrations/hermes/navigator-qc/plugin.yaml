@@ -1,0 +1,4 @@
+name: navigator-qc
+version: 1.0.0
+description: "\"QC this <claim>\" without evidence gets QC VERDICT: REJECT without the model; with evidence the model is told to call qc first."
+author: "NAVIGATOR"

@@ -1,0 +1,29 @@
+# Linux hosts, and every other platform netmiko knows (fallback): vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: generic
+vendor: ANY
+description: Linux hosts, and every other platform netmiko knows (fallback)
+platforms:
+  LINUX:
+    vendor: LINUX
+    aliases: []
+    netmiko: linux
+    pyats: linux
+    multivendor: linux
+    conn:
+    - SSH
+    reads: native:ssh
+    writes: none
+methods:
+  netmiko:
+    adapter: NetmikoText
+    conn: SSH
+    port: 22
+    note: 'rudder_devices.adapters: allowlisted commands over SSH, raw text, no writes'
+template_examples:
+  netmiko: JUMP1
+generic_defaults:
+  conn:
+  - SSH
+  reads: native:generic-netmiko
+  writes: none

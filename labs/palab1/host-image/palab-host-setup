@@ -1,0 +1,39 @@
+#!/bin/bash
+# palab-host-setup <name> <data-ip/len> <data-gw> <http-port> <mgmt-gw>
+# - eth0 (containerlab mgmt) moves into VRF MGMT (table 10) with its own default route, so SSH works
+#   from the management network while the data plane (eth1, main table) stays separate.
+# - nginx serves "<name> <ip> port <p>" on <http-port>; iperf3 server on 5201 (data plane); sshd on 22.
+set -u
+NAME=$1 IP=$2 GW=$3 PORT=$4 MGW=$5
+# data plane
+ip addr replace "$IP" dev eth1
+ip link set eth1 mtu 1500 up   # clab links default to 9500; PA-VM interfaces are 1500 (big TCP segments stall)
+ip route replace default via "$GW" dev eth1
+# management VRF
+if ! ip link show MGMT >/dev/null 2>&1; then
+  ip link add MGMT type vrf table 10
+  ip link set MGMT up
+  ip link set eth0 master MGMT
+fi
+ip route replace table 10 default via "$MGW" dev eth0
+sysctl -qw net.ipv4.tcp_l3mdev_accept=1 net.ipv4.udp_l3mdev_accept=1
+# web server
+mkdir -p /usr/share/nginx/html /var/log/nginx
+echo "palab1 $NAME ${IP%/*} port $PORT" > /usr/share/nginx/html/index.html
+cat > /etc/nginx/nginx.conf <<EOF
+user nginx;
+worker_processes 1;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+events { worker_connections 512; }
+http {
+  log_format main "\$remote_addr -> \$server_addr:\$server_port \"\$request\" \$status";
+  access_log /var/log/nginx/access.log main;
+  server { listen $PORT default_server; root /usr/share/nginx/html; location / { index index.html; } }
+}
+EOF
+pkill nginx 2>/dev/null; sleep 0.5; nginx
+# iperf3 server (data plane) and sshd (reachable via VRF MGMT thanks to tcp_l3mdev_accept)
+pkill iperf3 2>/dev/null; iperf3 -s -D -p 5201 --logfile /var/log/iperf3.log
+pgrep -x sshd >/dev/null || /usr/sbin/sshd
+echo "$NAME ready: data ${IP} gw ${GW}, http :${PORT}, iperf3 :5201, ssh via VRF MGMT"

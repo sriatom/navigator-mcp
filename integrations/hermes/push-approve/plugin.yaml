@@ -1,0 +1,4 @@
+name: push-approve
+version: 1.0.0
+description: "Approval codes: /pushok and /pushno (Slack: !pushok, !pushno), with method, channel and approver checks."
+author: "NAVIGATOR"

@@ -1,0 +1,56 @@
+# Palo Alto vendor pack. Everything NAVIGATOR needs for PAN-OS firewalls.
+pack: paloalto
+vendor: PALOALTO
+description: Palo Alto Networks PAN-OS firewalls (hardware, VM-Series)
+
+# ATLAS: the catalogue entry (moved from platforms_overlay.yml)
+platforms:
+  PANOS:
+    vendor: PALOALTO
+    aliases: [PA_PANOS, PALOALTO_PANOS, PAN_OS]
+    netmiko: paloalto_panos
+    ansible: paloaltonetworks.panos
+    multivendor: paloalto_panos
+    conn: [SSH, XML_API]
+    reads: native:ssh             # a CONN_TYPE XML_API record (or via=xml-api) reads over the XML API instead
+    writes: native:xml-api        # candidate config, diff, commit job, revert
+    validators: [batfish]
+
+# RUDDER: the connection methods this pack brings
+methods:
+  ssh:
+    adapter: NetmikoText          # rudder_devices.adapters: CLI text over SSH (netmiko paloalto_panos)
+    conn: SSH
+    port: 22
+  xml-api:
+    adapter: PanosXmlApi          # xmlapi.py: op commands over the XML API, replies as JSON (2026-11-15)
+    conn: XML_API
+    port: 443
+  xml-api-writer:
+    writer: PanosWriter           # writer.py: lines into the candidate over SSH, diff / commit / revert over the API
+    conn: XML_API
+    port: 443
+
+# RUDDER: CLI commands whose XML form is not just the words nested (the reader nests every word and puts
+# a value such as an interface name or an address in as text). Keys are the commands as on the list.
+xml_api_commands:
+  "show interface all": "<show><interface>all</interface></show>"
+  "show interface logical": "<show><interface>logical</interface></show>"
+  "show interface hardware": "<show><interface>hardware</interface></show>"
+  "show arp all": "<show><arp><entry name='all'/></arp></show>"
+  "show counter global filter severity drop": "<show><counter><global><filter><severity>drop</severity></filter></global></counter></show>"
+  "show config running": "<show><config><running></running></config></show>"
+
+# ATLAS: the fields the inventory interview asks for a PAN-OS record
+fields:
+  CONN_TYPE: {ask: "SSH (CLI text) or XML_API (JSON replies)? Changes always use the XML API",
+              values: [SSH, XML_API], default: SSH}
+  PORT: {ask: "port", default_by_conn: {SSH: 22, XML_API: 443}}
+  API_PORT: {ask: "XML API port on an SSH record (for changes and via=xml-api)", default: 443, optional: true}
+
+template_examples:
+  ssh: FW1
+  xml-api: FW1-API
+  xml-api-writer: FW1-API
+
+validators: [batfish]

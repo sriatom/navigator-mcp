@@ -1,0 +1,58 @@
+!Command: show running-config
+!Running configuration last done at: Sat Oct 11 09:12:44 2026
+version 10.2(5) Bios:version 05.47
+switchname nyc-core-sw1
+feature tacacs+
+feature bgp
+username admin password 5 $5$BIONJL$f2VuDq7v2dB8zNeLoeHo4Xr5lGHYpQ3rwbP6Jq3V.T1  role network-admin
+username mlopez password 5 $5$KDNGJL$aSbmn3nm1A2dlvrMq7wSCVgp6tbqFNiyUoL7.dwVeE3  role network-operator
+ip domain-name corp.globex.com
+tacacs-server key 7 "Wxyz1234abcd"
+tacacs-server host 10.10.1.30 key 7 "Qrst5678efgh"
+aaa group server tacacs+ GLOBEX-ISE
+    server 10.10.1.30
+    use-vrf management
+snmp-server user admin network-admin auth md5 0x8a1f6d2b44e95ab0c3d1e7f2a9b8c4d5 priv 0x8a1f6d2b44e95ab0c3d1e7f2a9b8c4d5 localizedkey
+snmp-server host 10.10.1.20 traps version 2c Gl0bexTRAP
+snmp-server community Gl0bexRO group network-operator
+snmp-server location NYC-DC1 Row 4 Rack 12
+snmp-server contact Globex NOC
+
+vlan 1,100,200
+vlan 100
+  name GLOBEX-USERS
+vlan 200
+  name PAYROLL-SERVERS
+
+vrf context management
+  ip route 0.0.0.0/0 10.10.255.1
+
+interface Ethernet1/48
+  description to nyc-core-rtr1 Gi0/0/1
+  no switchport
+  ip address 10.10.0.2/30
+  ip ospf authentication-key 3 9125d59c18a9b015
+
+interface mgmt0
+  vrf member management
+  ip address 10.10.255.11/24
+
+router bgp 65010
+  neighbor 10.10.0.1
+    remote-as 3356
+    password 3 d3b1d6dbd6a5ff5d
+
+nyc-core-sw1# show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Eth1/1, Eth1/2
+100  GLOBEX-USERS                     active    Eth1/10, Eth1/11
+200  PAYROLL-SERVERS                  active    Eth1/20
+
+nyc-core-sw1# show inventory
+NAME: "Chassis",  DESCR: "Nexus9000 C93180YC-FX Chassis"
+PID: N9K-C93180YC-FX     ,  VID: V04 ,  SN: FDO23461ABC
+
+2026 Oct 11 10:00:01 nyc-core-sw1 %ETHPORT-5-IF_DOWN_LINK_FAILURE: Interface Ethernet1/48 is down (Link failure)
+2026 Oct 11 10:00:05 nyc-core-sw1 %AUTHPRIV-6-SYSTEM_MSG: pam_unix(aaa:session): session opened for user mlopez by (uid=0) - dcos_sshd[1234]

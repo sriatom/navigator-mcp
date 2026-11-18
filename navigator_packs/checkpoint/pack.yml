@@ -1,0 +1,25 @@
+# Check Point Gaia: vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: checkpoint
+vendor: CHECKPOINT
+description: Check Point Gaia
+platforms:
+  GAIA:
+    vendor: CHECKPOINT
+    aliases:
+    - CHECKPOINT
+    - CHECKPOINT_GAIA
+    netmiko: checkpoint_gaia
+    ansible: check_point.mgmt
+    conn:
+    - API
+    - SSH
+    reads: delegated:checkpoint
+    writes: delegated:checkpoint
+methods:
+  checkpoint:
+    adapter: delegated:checkpoint
+    conn: API
+    port: 443
+    available: false
+    note: 'a Check Point MCP server: not installed / not wired yet'

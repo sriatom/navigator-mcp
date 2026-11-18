@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="NAVIGATOR">
+  <title>NAVIGATOR</title>
+  <rect width="120" height="120" rx="24" fill="#0F2A44"/>
+  <circle cx="60" cy="60" r="40" fill="none" stroke="#5EC4B6" stroke-width="3"/>
+  <circle cx="20" cy="60" r="5" fill="#5EC4B6"/>
+  <circle cx="100" cy="60" r="5" fill="#5EC4B6"/>
+  <polygon points="60,18 69,60 51,60" fill="#F2A93B"/>
+  <polygon points="60,102 69,60 51,60" fill="#5EC4B6"/>
+  <circle cx="60" cy="60" r="4" fill="#0F2A44"/>
+</svg>

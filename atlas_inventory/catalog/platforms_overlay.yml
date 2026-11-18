@@ -1,0 +1,42 @@
+# Hand-maintained part of the platform catalogue. scripts/gen_platforms.py merges this with
+# netmiko's own platform list and writes PLATFORMS.yml (never edit PLATFORMS.yml by hand).
+#
+# Per platform:
+#   vendor, aliases (other names seen in inventories), the name each tool uses
+#   (netmiko / napalm / pyats / ansible / multivendor), anta (true = ANTA can validate it),
+#   conn (connection types), and which RUDDER adapter owns reads and writes:
+#     native:<driver>     our own code in RUDDER (eapi, ssh-json, netmiko, xml-api, vmanage, ssh)
+#     delegated:<server>  an MCP server called by RUDDER (writes only after /pushok)
+#     none                not supported (yet)
+# Platforms that only netmiko knows get: reads native:generic-netmiko (allowlisted commands,
+# raw text), writes none.
+# Sources checked 2026-11-11: multivendor-cli-mcp NETMIKO_DRIVER / NAPALM_DRIVER tables,
+# and the MCP server catalogues they come from.
+
+PLATFORMS: {}     # every platform now lives in a vendor pack (navigator_packs/<vendor>/pack.yml)
+
+CONTROLLER_PRODUCTS:
+  VMANAGE:          {vendor: CISCO,      reads: native:vmanage,          writes: none,                     note: "an SD-WAN MCP server (12 read tools) to evaluate"}
+  MERAKI:           {vendor: CISCO,      reads: delegated:meraki,        writes: none,                     note: "official remote server, read-only"}
+  CATALYST_CENTER:  {vendor: CISCO,      reads: delegated:catc,          writes: none}
+  APIC:             {vendor: CISCO,      reads: delegated:aci,           writes: delegated:aci}
+  NSO:              {vendor: CISCO,      reads: delegated:nso,           writes: delegated:nso}
+  ISE:              {vendor: CISCO,      reads: delegated:ise,           writes: delegated:ise}
+  FMC:              {vendor: CISCO,      reads: delegated:fmc,           writes: delegated:fmc}
+  RADKIT:           {vendor: CISCO,      reads: delegated:radkit,        writes: none,                     note: "remote access path"}
+  CLOUDVISION:      {vendor: ARISTA,     reads: delegated:arista-cvp,    writes: none}
+  PANORAMA:         {vendor: PALOALTO,   reads: delegated:panorama,      writes: delegated:panorama}
+  PRISMA_SDWAN:     {vendor: PALOALTO,   reads: delegated:prisma-sdwan,  writes: none}
+  FORTIMANAGER:     {vendor: FORTINET,   reads: delegated:fortinet,      writes: delegated:fortinet}
+  FORTIANALYZER:    {vendor: FORTINET,   reads: delegated:fortinet,      writes: none}
+  CHECKPOINT_MGMT:  {vendor: CHECKPOINT, reads: delegated:checkpoint,    writes: delegated:checkpoint}
+  ZSCALER:          {vendor: ZSCALER,    reads: delegated:zscaler,       writes: none}
+  ITENTIAL:         {vendor: ITENTIAL,   reads: delegated:itential,      writes: none}
+
+# OOB records: TYPE -> adapter.
+OOB_TYPES:
+  CONSOLE_SERVER:   {reads: delegated:slc,      writes: none, note: "Lantronix SLC; Percepxion for fleets (delegated:percepxion)"}
+  BMC:              {reads: delegated:redfish,  writes: none, note: "Redfish"}
+
+# Names in NAVI's command list (COMMANDS.yml) that are not platform ids or aliases above.
+COMMAND_KEYS: {}

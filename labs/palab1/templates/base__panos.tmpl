@@ -1,0 +1,41 @@
+# PAN-OS base template for containerlab (NAVIGATOR labs). Login admin / admin.
+
+configure 
+
+set mgt-config users admin phash $1$navlab$yL5x/5ROJK4SkLp61HOoI0
+
+set deviceconfig system hostname {{ .ShortName }}
+set deviceconfig system domain {{ .Env.DOMAIN_NAME }}
+
+set deviceconfig system type static
+
+{{ if .MgmtIPv4Address }} set deviceconfig system ip-address {{ .MgmtIPv4Address }} netmask 255.255.255.0 default-gateway {{ .MgmtIPv4Gateway }}{{end}}
+
+set deviceconfig system timezone UTC
+set deviceconfig system dns-setting servers primary 8.8.8.8
+set deviceconfig system dns-setting servers secondary 9.9.9.9
+set deviceconfig system ntp-servers primary-ntp-server ntp-server-address 45.77.78.241
+set deviceconfig system ntp-servers secondary-ntp-server ntp-server-address 198.98.50.212
+
+set deviceconfig system update-server updates.paloaltonetworks.com
+set deviceconfig system update-schedule threats recurring weekly day-of-week wednesday
+set deviceconfig system update-schedule threats recurring weekly at 01:02
+set deviceconfig system update-schedule threats recurring weekly action download-only
+set deviceconfig system service disable-telnet yes
+set deviceconfig system service disable-http yes
+
+set deviceconfig setting jumbo-frame mtu 8950
+
+set network profiles interface-management-profile PING_ONLY ping yes
+
+set network profiles interface-management-profile MANAGEMENT_ACCESS permitted-ip 10.0.0.0/8 
+set network profiles interface-management-profile MANAGEMENT_ACCESS permitted-ip 172.16.0.0/12 
+set network profiles interface-management-profile MANAGEMENT_ACCESS permitted-ip 192.168.0.0/16
+set network profiles interface-management-profile MANAGEMENT_ACCESS https yes
+set network profiles interface-management-profile MANAGEMENT_ACCESS ssh yes
+set network profiles interface-management-profile MANAGEMENT_ACCESS ping yes
+
+set cli pager off
+set cli config-output-format set
+
+commit 

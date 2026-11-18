@@ -1,0 +1,145 @@
+!
+hostname PDFW1
+!
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management console
+   idle-timeout 30
+!
+management api gnmi
+   transport grpc default
+      vrf M
+!
+management api netconf
+   transport ssh default
+      vrf M
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+!
+spanning-tree mode mstp
+!
+ip name-server vrf M 8.8.4.4
+ip name-server vrf M 8.8.8.8
+!
+service routing protocols model multi-agent
+!
+!
+interface Management0
+   description Out-of-Band/OOB Interface via CLAB
+   vrf M
+   ip address 172.31.11.41/24
+   exit
+!
+!
+ip route vrf M 0.0.0.0/0 172.31.11.1
+!
+ntp local-interface vrf M Management0
+ntp server vrf M 0.pool.ntp.org prefer
+ntp server vrf M 2.pool.ntp.org
+!
+
+!
+interface Loopback1
+   description PD:LOOPBACK
+   ip address 10.25.10.41/32
+   pim ipv4 sparse-mode
+!
+
+!
+interface Port-Channel1
+   description PDSVCL1A/PDSVCL1B
+   no switchport
+   mtu 8216
+   mlag 1
+   no shutdown
+   exit
+!
+interface Port-Channel1.3702
+   description PDFW_WANFAB
+   encapsulation dot1q vlan 3702
+   ip address 10.30.60.51/27
+   no shutdown
+   exit
+!
+interface Port-Channel1.3703
+   description PDFW_PDFAB
+   encapsulation dot1q vlan 3703
+   ip address 10.30.60.81/27
+   no shutdown
+   exit
+!
+interface Ethernet1
+   description PDSVCL1A:Eth7
+   channel-group 1 mode active
+   no shutdown
+   exit
+!
+interface Ethernet2
+   description PDSVCL1B:Eth7
+   channel-group 1 mode active
+   no shutdown
+   exit
+!
+
+
+!
+router general
+   router-id ipv4 10.25.10.41
+!
+
+!
+router bgp 65501
+   no bgp default ipv4-unicast
+   maximum-paths 16 ecmp 16
+   distance bgp 20 200 200
+
+   neighbor PDFW_WANFAB peer group
+   neighbor PDFW_WANFAB remote-as 64999
+   neighbor PDFW_WANFAB bfd
+   neighbor PDFW_WANFAB send-community
+   neighbor PDFW_WANFAB maximum-routes 1000
+
+   neighbor 10.30.60.41 peer group PDFW_WANFAB
+   neighbor 10.30.60.41 description WANFAB1A
+   neighbor 10.30.60.42 peer group PDFW_WANFAB
+   neighbor 10.30.60.42 description WANFAB1B
+
+   neighbor PDFW_PDFAB peer group
+   neighbor PDFW_PDFAB remote-as 65300
+   neighbor PDFW_PDFAB bfd
+   neighbor PDFW_PDFAB send-community
+   neighbor PDFW_PDFAB maximum-routes 1000
+
+   neighbor 10.30.60.71 peer group PDFW_PDFAB
+   neighbor 10.30.60.71 description PDSVCL1A
+   neighbor 10.30.60.72 peer group PDFW_PDFAB
+   neighbor 10.30.60.72 description PDSVCL1B
+  !
+   address-family ipv4
+      redistribute connected
+      neighbor PDFW_PDFAB activate
+      neighbor PDFW_WANFAB activate
+   exit
+!
+end
+!

@@ -1,0 +1,100 @@
+# palab1: Palo Alto + Arista lab for NAVIGATOR (containerlab).
+# Internet edge (PA-EDGE), data-center segmentation (PA-DC), branch with an overlapping LAN (PA-BR).
+# eBGP everywhere: ISP1 64500, PA-EDGE 65001, PA-DC 65002, PA-BR 65003, CORE1 65010, WAN1 65020.
+# Logins: admin / admin on every node. Mgmt 172.31.12.0/24.
+# Before the first start: docker build -t palab-host:1 host-image/
+# Start:  sudo containerlab deploy -t topology.yml      Stop: sudo containerlab destroy -t topology.yml
+name: palab1
+mgmt:
+  network: palab1
+  ipv4-subnet: 172.31.12.0/24
+  mtu: 1500
+
+topology:
+  kinds:
+    ceos:
+      image: ceos:4338m
+      env:
+        MGMT_VRF: M
+        DOMAIN_NAME: example.com
+      startup-config: templates/base__ceos.tmpl
+    vr-pan:
+      image: vrnetlab/paloalto_pa-vm:11.2.8
+      env:
+        M_NETMASK: '255.255.255.0'
+        DOMAIN_NAME: 'example.com'
+      startup-config: templates/base__panos.tmpl
+    linux:
+      image: palab-host:1
+
+  nodes:
+    # ---------------- firewalls (PAN-OS 11.2.8, ~6.5 GB RAM each, ~15 min boot)
+    PA-EDGE:
+      kind: vr-pan
+      mgmt-ipv4: 172.31.12.21
+      startup-config: configs/PA-EDGE.txt
+    PA-DC:
+      kind: vr-pan
+      mgmt-ipv4: 172.31.12.22
+      startup-config: configs/PA-DC.txt
+    PA-BR:
+      kind: vr-pan
+      mgmt-ipv4: 172.31.12.23
+      startup-config: configs/PA-BR.txt
+
+    # ---------------- Arista cEOS
+    ISP1:
+      kind: ceos
+      mgmt-ipv4: 172.31.12.11
+      startup-config: configs/ISP1.txt
+    CORE1:
+      kind: ceos
+      mgmt-ipv4: 172.31.12.12
+      startup-config: configs/CORE1.txt
+    WAN1:
+      kind: ceos
+      mgmt-ipv4: 172.31.12.13
+      startup-config: configs/WAN1.txt
+
+    # ---------------- test hosts: palab-host-setup <name> <data ip> <data gw> <http port> <mgmt gw>
+    INET-HOST:
+      kind: linux
+      mgmt-ipv4: 172.31.12.31
+      exec: ["palab-host-setup INET-HOST 203.0.113.10/24 203.0.113.1 80 172.31.12.1"]
+    DMZ-WEB:
+      kind: linux
+      mgmt-ipv4: 172.31.12.32
+      exec: ["palab-host-setup DMZ-WEB 172.16.50.10/24 172.16.50.1 8080 172.31.12.1"]
+    USER-HQ:
+      kind: linux
+      mgmt-ipv4: 172.31.12.33
+      exec: ["palab-host-setup USER-HQ 10.10.10.10/24 10.10.10.1 80 172.31.12.1"]
+    APP1:
+      kind: linux
+      mgmt-ipv4: 172.31.12.34
+      exec: ["palab-host-setup APP1 10.20.20.10/24 10.20.20.1 8080 172.31.12.1"]
+    DB1:
+      kind: linux
+      mgmt-ipv4: 172.31.12.35
+      exec: ["palab-host-setup DB1 10.30.30.10/24 10.30.30.1 5432 172.31.12.1"]
+    USER-BR:
+      kind: linux
+      mgmt-ipv4: 172.31.12.36
+      exec: ["palab-host-setup USER-BR 10.10.10.10/24 10.10.10.1 80 172.31.12.1"]
+
+  links:
+    # internet edge
+    - endpoints: ["ISP1:eth1", "PA-EDGE:eth1"]      # 198.51.100.0/28   OUTSIDE
+    - endpoints: ["ISP1:eth2", "INET-HOST:eth1"]    # 203.0.113.0/24
+    - endpoints: ["PA-EDGE:eth2", "DMZ-WEB:eth1"]   # 172.16.50.0/24    DMZ
+    - endpoints: ["PA-EDGE:eth3", "CORE1:eth1"]     # 10.255.1.0/30     INSIDE
+    # campus core
+    - endpoints: ["CORE1:eth2", "USER-HQ:eth1"]     # 10.10.10.0/24     HQ users
+    - endpoints: ["CORE1:eth3", "PA-DC:eth1"]       # 10.255.2.0/30     CORE
+    - endpoints: ["CORE1:eth4", "WAN1:eth1"]        # 10.255.3.0/30
+    # data center
+    - endpoints: ["PA-DC:eth2", "APP1:eth1"]        # 10.20.20.0/24     APP
+    - endpoints: ["PA-DC:eth3", "DB1:eth1"]         # 10.30.30.0/24     DB
+    # branch (LAN overlaps HQ users on purpose)
+    - endpoints: ["WAN1:eth2", "PA-BR:eth1"]        # 10.255.4.0/30     WAN
+    - endpoints: ["PA-BR:eth2", "USER-BR:eth1"]     # 10.10.10.0/24     BR-LAN

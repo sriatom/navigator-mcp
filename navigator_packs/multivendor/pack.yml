@@ -1,0 +1,146 @@
+# Platforms served by the multivendor-cli MCP server (netmiko): vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: multivendor
+vendor: MULTIVENDOR
+description: Platforms served by the multivendor-cli MCP server (netmiko)
+platforms:
+  FRR:
+    vendor: FRR
+    netmiko: linux
+    multivendor: frr
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+    validators:
+    - batfish
+  CUMULUS:
+    vendor: NVIDIA
+    aliases:
+    - CUMULUS_LINUX
+    netmiko: cumulus_linux
+    ansible: nvidia.nvue
+    multivendor: cumulus_linux
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+    validators:
+    - batfish
+    - suzieq
+  SRLINUX:
+    vendor: NOKIA
+    aliases:
+    - NOKIA_SRL
+    - SRL
+    netmiko: nokia_srl
+    multivendor: nokia_srl
+    conn:
+    - SSH
+    - GNMI
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+    validators:
+    - suzieq
+  SROS:
+    vendor: NOKIA
+    aliases:
+    - NOKIA_SROS
+    netmiko: nokia_sros
+    multivendor: nokia_sros
+    conn:
+    - SSH
+    - GNMI
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+  VYOS:
+    vendor: VYOS
+    netmiko: vyos
+    ansible: vyos.vyos.vyos
+    multivendor: vyos
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+  ROUTEROS:
+    vendor: MIKROTIK
+    aliases:
+    - MIKROTIK_ROUTEROS
+    - MIKROTIK
+    netmiko: mikrotik_routeros
+    ansible: community.routeros.routeros
+    multivendor: mikrotik_routeros
+    conn:
+    - SSH
+    - API
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+  SONIC:
+    vendor: SONIC
+    aliases:
+    - DELL_SONIC
+    - EDGECORE_SONIC
+    netmiko: dell_sonic
+    ansible: dellemc.enterprise_sonic.sonic
+    multivendor: dell_sonic
+    conn:
+    - SSH
+    - GNMI
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+    validators:
+    - batfish
+    - suzieq
+  OS10:
+    vendor: DELL
+    aliases:
+    - DELL_OS10
+    netmiko: dell_os10
+    ansible: dellemc.os10.os10
+    multivendor: dell_os10
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+  EXOS:
+    vendor: EXTREME
+    aliases:
+    - EXTREME_EXOS
+    netmiko: extreme_exos
+    ansible: community.network.exos
+    multivendor: extreme_exos
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+  VRP:
+    vendor: HUAWEI
+    aliases:
+    - HUAWEI_VRP
+    - HUAWEI
+    netmiko: huawei_vrp
+    multivendor: huawei_vrp
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+  EDGEOS:
+    vendor: UBIQUITI
+    aliases:
+    - UBIQUITI_EDGE
+    - EDGEROUTER
+    netmiko: ubiquiti_edge
+    ansible: community.network.edgeos
+    multivendor: ubiquiti_edge
+    conn:
+    - SSH
+    reads: delegated:multivendor
+    writes: delegated:multivendor
+methods:
+  multivendor:
+    adapter: delegated:multivendor
+    conn: SSH
+    port: 22
+    note: the multivendor-cli MCP server (netmiko, text)
+template_examples:
+  multivendor: FRR1

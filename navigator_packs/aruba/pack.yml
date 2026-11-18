@@ -1,0 +1,25 @@
+# HPE Aruba AOS-CX switches: vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: aruba
+vendor: ARUBA
+description: HPE Aruba AOS-CX switches
+platforms:
+  AOSCX:
+    vendor: ARUBA
+    aliases:
+    - ARUBA_CX
+    - ARUBA_AOSCX
+    netmiko: aruba_aoscx
+    ansible: arubanetworks.aoscx
+    conn:
+    - API
+    - SSH
+    reads: delegated:aruba-cx
+    writes: delegated:aruba-cx
+methods:
+  aruba-cx:
+    adapter: delegated:aruba-cx
+    conn: API
+    port: 443
+    available: false
+    note: 'an AOS-CX MCP server: not installed / not wired yet'

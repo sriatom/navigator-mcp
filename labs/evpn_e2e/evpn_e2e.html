@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arista EVPN Fabric (evpn_e2e)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column, same look as palab1. Topology first, then EVPN services, routing policy, verified flows, quirks, chat tests. */
+:root{
+  --bg:#f5f6f4; --panel:#ffffff; --fg:#1b2024; --muted:#5d666d; --line:#c9cfd2;
+  --fw:#c2410c; --fw-soft:#fde7dc; --eos:#1d5f8a; --eos-soft:#dcebf5; --host:#6b7280; --host-soft:#eceef0;
+  --pd:#1d5f8a; --wan:#6d4bb3; --qa:#1f7a45;
+  --ok:#1f7a45; --ok-soft:#ddf1e5; --bad:#a3262a; --bad-soft:#f6dddd; --warn:#8a5a00; --warn-soft:#fbefd2;
+  --display:"Archivo","Segoe UI",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111518; --panel:#181d21; --fg:#e4e8ea; --muted:#9aa4ab; --line:#333c42;
+  --fw:#fb8a52; --fw-soft:#3a2219; --eos:#6cb4e4; --eos-soft:#16293a; --host:#a9b1b8; --host-soft:#22282d;
+  --pd:#6cb4e4; --wan:#b39ae8; --qa:#5fd08f;
+  --ok:#5fd08f; --ok-soft:#163223; --bad:#f08488; --bad-soft:#3a1c1e; --warn:#e8b65a; --warn-soft:#352a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111518; --panel:#181d21; --fg:#e4e8ea; --muted:#9aa4ab; --line:#333c42;
+  --fw:#fb8a52; --fw-soft:#3a2219; --eos:#6cb4e4; --eos-soft:#16293a; --host:#a9b1b8; --host-soft:#22282d;
+  --pd:#6cb4e4; --wan:#b39ae8; --qa:#5fd08f;
+  --ok:#5fd08f; --ok-soft:#163223; --bad:#f08488; --bad-soft:#3a1c1e; --warn:#e8b65a; --warn-soft:#352a12; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--display);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+main{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+.meta span{overflow-wrap:anywhere}
+h1{font-weight:800;font-size:clamp(28px,4vw,40px);letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-size:20px;font-weight:800;margin:0 0 10px;text-wrap:balance}
+h3{font-size:15px;font-weight:600;margin:18px 0 6px}
+p{margin:0;max-width:72ch}
+.lede{color:var(--muted);margin-top:8px}
+.mono,code{font-family:var(--mono);font-size:.88em}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.meta b{color:var(--fg);font-weight:500}
+.todo{border:1px solid var(--warn);background:var(--warn-soft);border-radius:8px;padding:14px 16px;display:grid;gap:8px}
+.todo h2{color:var(--warn);font-size:16px;margin:0}
+.todo ol,.todo ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+svg{display:block;min-width:1000px;width:100%;height:auto}
+svg text{font-family:var(--mono)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--bg)}
+td.n{font-family:var(--mono);white-space:nowrap;color:var(--muted)}
+td.m{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.pill{display:inline-block;font-family:var(--mono);font-size:12px;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.no{background:var(--bad-soft);color:var(--bad)}
+.tag{display:inline-block;font-family:var(--mono);font-size:11.5px;padding:0 7px;border-radius:4px;border:1px solid;white-space:nowrap}
+.tag.pd{color:var(--pd)} .tag.wan{color:var(--wan)} .tag.qa{color:var(--qa)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin-top:10px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1.5px solid}
+.sw.fw{background:var(--fw-soft);border-color:var(--fw)} .sw.eos{background:var(--eos-soft);border-color:var(--eos)} .sw.h{background:var(--host-soft);border-color:var(--host)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.cols>*{min-width:0}
+.mode{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--panel)}
+.mode b{font-family:var(--mono);font-weight:500}
+blockquote{margin:0;font-family:var(--mono);font-size:12.5px;background:var(--bg);border-left:3px solid var(--line);padding:6px 10px;color:var(--fg)}
+</style>
+
+<main>
+<header>
+  <h1>Arista EVPN Fabric</h1>
+  <p class="lede">Two Arista EVPN/VXLAN fabrics (PD and QA) joined through a WAN border fabric that acts as the EVPN domain gateway, with a firewall in front of each fabric and an ISP behind the border. 22 cEOS nodes, for health checks, path questions and QA-only change tests.</p>
+  <div class="meta"><span>lab <b>evpn_e2e</b></span><span>cEOS <b>4.35.2F</b> (image tag ceos:4336m)</span><span>mgmt <b>172.31.11.0/24</b> (VRF M)</span><span>login <b>admin / admin</b></span><span>BGP <b>148 sessions</b></span><span>flows <b>17/17 pass</b></span></div>
+</header>
+
+<section>
+  <h2>Topology</h2>
+  <div class="scroll">
+  <svg viewBox="0 0 1240 604" role="img" aria-label="evpn_e2e_v3 topology: PD fabric, WAN border fabric and QA fabric, firewalls PDFW1 and QAFW1, service nodes SERVICE1 to SERVICE4">
+    <defs><style>
+      .rg{fill:none;stroke-width:1.5;stroke-dasharray:6 5}
+      .rl{font-size:12px;font-weight:500}
+      .lk{stroke:var(--line);stroke-width:2.5;fill:none}
+      .ds{stroke:var(--fw);stroke-width:2;fill:none;stroke-dasharray:5 4}
+      .fwb{fill:var(--fw-soft);stroke:var(--fw);stroke-width:2}
+      .eob{fill:var(--eos-soft);stroke:var(--eos);stroke-width:2}
+      .hb{fill:var(--host-soft);stroke:var(--host);stroke-width:1.5}
+      .nm{font-size:14px;font-weight:500;fill:var(--fg)}
+      .sb{font-size:11px;fill:var(--muted)}
+      .net{font-size:11px;fill:var(--muted)}
+      .fwt{font-size:11px;fill:var(--fw)}
+    </style></defs>
+    <!-- regions -->
+    <rect class="rg" x="12" y="12" width="500" height="520" rx="10" style="stroke:var(--pd)"/>
+    <rect class="rg" x="530" y="12" width="200" height="520" rx="10" style="stroke:var(--wan)"/>
+    <rect class="rg" x="748" y="12" width="480" height="520" rx="10" style="stroke:var(--qa)"/>
+    <text class="rl" x="24" y="34" style="fill:var(--pd)">PD fabric · VRF PCS · L3 VNI 30100</text>
+    <text class="rl" x="542" y="34" style="fill:var(--wan)">WAN border · VRF WCS</text>
+    <text class="rl" x="760" y="34" style="fill:var(--qa)">QA fabric · VRF QACS · L3 VNI 30300</text>
+
+    <!-- spine to pair links -->
+    <path class="lk" d="M175 104 L96 230"/><path class="lk" d="M175 104 L256 230"/><path class="lk" d="M175 104 L416 230"/>
+    <path class="lk" d="M335 104 L96 230"/><path class="lk" d="M335 104 L256 230"/><path class="lk" d="M335 104 L416 230"/>
+    <path class="lk" d="M900 104 L836 230"/><path class="lk" d="M900 104 L1140 230"/>
+    <path class="lk" d="M1070 104 L836 230"/><path class="lk" d="M1070 104 L1140 230"/>
+    <!-- fabric to WAN transit -->
+    <path class="lk" d="M490 260 H556"/><path class="lk" d="M704 260 H762"/>
+    <!-- downlinks -->
+    <path class="lk" d="M96 290 V420"/><path class="lk" d="M256 290 V420"/><path class="lk" d="M416 290 V420"/>
+    <path class="lk" d="M630 290 V420"/><path class="lk" d="M836 290 V420"/><path class="lk" d="M1140 290 V420"/>
+    <text class="net" x="102" y="350">Po11</text><text class="net" x="102" y="364">VL11-13,22</text>
+    <text class="net" x="262" y="350">Po21</text><text class="net" x="262" y="364">VL11,21,22</text>
+    <text class="fwt" x="422" y="350">Po7 inside</text><text class="fwt" x="422" y="364">VL3703</text>
+    <text class="net" x="636" y="350">Po9</text><text class="net" x="636" y="364">Eth10</text>
+    <text class="fwt" x="842" y="350">Po7 inside</text><text class="fwt" x="842" y="364">VL3803</text>
+    <text class="net" x="1146" y="350">Po11</text><text class="net" x="1146" y="364">VL111-113</text><text class="net" x="1146" y="378">VL122</text>
+    <!-- firewall outside legs: bridged over VXLAN to WANFAB -->
+    <path class="ds" d="M490 444 H570 V290"/>
+    <path class="ds" d="M762 444 H690 V290"/>
+
+    <!-- spines -->
+    <rect class="eob" x="110" y="56" width="130" height="48" rx="6"/><text class="nm" x="175" y="77" text-anchor="middle">PDSPINE1</text><text class="sb" x="175" y="93" text-anchor="middle">AS 65000 · .10</text>
+    <rect class="eob" x="270" y="56" width="130" height="48" rx="6"/><text class="nm" x="335" y="77" text-anchor="middle">PDSPINE2</text><text class="sb" x="335" y="93" text-anchor="middle">AS 65000 · .20</text>
+    <rect class="eob" x="835" y="56" width="130" height="48" rx="6"/><text class="nm" x="900" y="77" text-anchor="middle">QASPINE1</text><text class="sb" x="900" y="93" text-anchor="middle">AS 64000 · .110</text>
+    <rect class="eob" x="1005" y="56" width="130" height="48" rx="6"/><text class="nm" x="1070" y="77" text-anchor="middle">QASPINE2</text><text class="sb" x="1070" y="93" text-anchor="middle">AS 64000 · .120</text>
+    <!-- MLAG pairs -->
+    <rect class="eob" x="22" y="230" width="148" height="60" rx="6"/><text class="nm" x="96" y="251" text-anchor="middle">PDLEAF1A·1B</text><text class="sb" x="96" y="267" text-anchor="middle">AS 65100 · MLAG</text><text class="sb" x="96" y="281" text-anchor="middle">VTEP 10.250.10.10</text>
+    <rect class="eob" x="182" y="230" width="148" height="60" rx="6"/><text class="nm" x="256" y="251" text-anchor="middle">PDLEAF2A·2B</text><text class="sb" x="256" y="267" text-anchor="middle">AS 65200 · MLAG</text><text class="sb" x="256" y="281" text-anchor="middle">VTEP 10.250.10.20</text>
+    <rect class="eob" x="342" y="230" width="148" height="60" rx="6"/><text class="nm" x="416" y="251" text-anchor="middle">PDSVCL1A·1B</text><text class="sb" x="416" y="267" text-anchor="middle">AS 65300 · service</text><text class="sb" x="416" y="281" text-anchor="middle">VTEP 10.250.10.30</text>
+    <rect class="eob" x="556" y="230" width="148" height="60" rx="6" style="stroke:var(--wan)"/><text class="nm" x="630" y="251" text-anchor="middle">WANFAB1A·1B</text><text class="sb" x="630" y="267" text-anchor="middle">AS 64999 · gateway</text><text class="sb" x="630" y="281" text-anchor="middle">VTEP 10.250.10.60</text>
+    <rect class="eob" x="762" y="230" width="148" height="60" rx="6"/><text class="nm" x="836" y="251" text-anchor="middle">QASVCL1A·1B</text><text class="sb" x="836" y="267" text-anchor="middle">AS 64300 · service</text><text class="sb" x="836" y="281" text-anchor="middle">VTEP 10.250.10.130</text>
+    <rect class="eob" x="1066" y="230" width="148" height="60" rx="6"/><text class="nm" x="1140" y="251" text-anchor="middle">QALEAF1A·1B</text><text class="sb" x="1140" y="267" text-anchor="middle">AS 64100 · MLAG</text><text class="sb" x="1140" y="281" text-anchor="middle">VTEP 10.250.10.110</text>
+    <!-- bottom row -->
+    <rect class="hb" x="22" y="420" width="148" height="48" rx="22"/><text class="nm" x="96" y="441" text-anchor="middle">SERVICE1</text><text class="sb" x="96" y="457" text-anchor="middle">VRF A · B · C</text>
+    <rect class="hb" x="182" y="420" width="148" height="48" rx="22"/><text class="nm" x="256" y="441" text-anchor="middle">SERVICE2</text><text class="sb" x="256" y="457" text-anchor="middle">VRF A · B</text>
+    <rect class="fwb" x="342" y="420" width="148" height="48" rx="6"/><text class="nm" x="416" y="441" text-anchor="middle">PDFW1</text><text class="sb" x="416" y="457" text-anchor="middle">AS 65501</text>
+    <rect class="hb" x="556" y="420" width="148" height="48" rx="22"/><text class="nm" x="630" y="441" text-anchor="middle">SERVICE3</text><text class="sb" x="630" y="457" text-anchor="middle">hosts + ISP AS 12085</text>
+    <rect class="fwb" x="762" y="420" width="148" height="48" rx="6"/><text class="nm" x="836" y="441" text-anchor="middle">QAFW1</text><text class="sb" x="836" y="457" text-anchor="middle">AS 64501</text>
+    <rect class="hb" x="1066" y="420" width="148" height="48" rx="22"/><text class="nm" x="1140" y="441" text-anchor="middle">SERVICE4</text><text class="sb" x="1140" y="457" text-anchor="middle">VRF A · B · C</text>
+    <!-- notes -->
+    <text class="fwt" x="12" y="556">dashed: firewall outside (VL3702 / VL3802) is cabled to its service leafs and bridged to WANFAB over VNI 13702 / 13802</text>
+    <text class="sb" x="12" y="574">service leafs to WANFAB: VL3701 10.30.60.0/27 (PD), VL3801 10.130.60.0/27 (QA) · WANFAB to SERVICE3: Po9 hosts (VL11, 61, 111), Eth10 ISP eBGP</text>
+    <text class="sb" x="12" y="592">eBGP underlay + eBGP EVPN overlay (spines are the overlay hubs) · PD and QA never peer directly: WANFAB is the EVPN domain gateway</text>
+  </svg>
+  </div>
+  <div class="legend"><span><i class="sw eos"></i>Arista cEOS (pair = MLAG)</span><span><i class="sw fw"></i>firewall stand-in (cEOS router)</span><span><i class="sw h"></i>service node (cEOS, one VRF per host)</span><span style="color:var(--pd)">PD</span><span style="color:var(--wan)">WAN</span><span style="color:var(--qa)">QA</span></div>
+</section>
+
+<section>
+  <h2>Devices</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Device</th><th>Role</th><th>Mgmt</th><th>AS</th><th>Loopback0</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="m">PDSPINE1 / 2</td><td><span class="tag pd">PD</span> spine</td><td class="m">.10 / .20</td><td class="m">65000</td><td class="m">10.25.10.10 / .20</td><td>EVPN overlay hub for all six PD leafs</td></tr>
+      <tr><td class="m">PDLEAF1A / 1B</td><td><span class="tag pd">PD</span> leaf, MLAG PDLEAF01</td><td class="m">.11 / .12</td><td class="m">65100</td><td class="m">10.25.10.11 / .12</td><td>SERVICE1 on Po11</td></tr>
+      <tr><td class="m">PDLEAF2A / 2B</td><td><span class="tag pd">PD</span> leaf, MLAG PDLEAF02</td><td class="m">.21 / .22</td><td class="m">65200</td><td class="m">10.25.10.21 / .22</td><td>SERVICE2 on Po21</td></tr>
+      <tr><td class="m">PDSVCL1A / 1B</td><td><span class="tag pd">PD</span> service leaf, MLAG PDSVC01</td><td class="m">.31 / .32</td><td class="m">65300</td><td class="m">10.25.10.31 / .32</td><td>PD side of the domain gateway (domain 10301:10000); PDFW1 on Po7</td></tr>
+      <tr><td class="m">PDFW1</td><td><span class="tag pd">PD</span> firewall</td><td class="m">.41</td><td class="m">65501</td><td class="m">Lo1 10.25.10.41</td><td>cEOS router, no policy; inside .81 on 10.30.60.64/27, outside .51 on 10.30.60.32/27</td></tr>
+      <tr><td class="m">WANFAB1A / 1B</td><td><span class="tag wan">WAN</span> border, MLAG WANFAB01</td><td class="m">.61 / .62</td><td class="m">64999</td><td class="m">10.25.10.61 / .62</td><td>EVPN domain gateway (10301:64999), route reflector for each other, ISP peering (local-as 100)</td></tr>
+      <tr><td class="m">QASPINE1 / 2</td><td><span class="tag qa">QA</span> spine</td><td class="m">.110 / .120</td><td class="m">64000</td><td class="m">10.25.10.110 / .120</td><td>EVPN overlay hub for the four QA leafs</td></tr>
+      <tr><td class="m">QALEAF1A / 1B</td><td><span class="tag qa">QA</span> leaf, MLAG QALEAF01</td><td class="m">.111 / .112</td><td class="m">64100</td><td class="m">10.25.10.111 / .112</td><td>SERVICE4 on Po11; the usual change-test device</td></tr>
+      <tr><td class="m">QASVCL1A / 1B</td><td><span class="tag qa">QA</span> service leaf, MLAG QASVC01</td><td class="m">.131 / .132</td><td class="m">64300</td><td class="m">10.25.10.131 / .132</td><td>QA side of the domain gateway (domain 10301:30000); QAFW1 on Po7</td></tr>
+      <tr><td class="m">QAFW1</td><td><span class="tag qa">QA</span> firewall</td><td class="m">.141</td><td class="m">64501</td><td class="m">Lo1 10.25.10.141</td><td>cEOS router, no policy; inside .81 on 10.130.60.64/27, outside .51 on 10.130.60.32/27</td></tr>
+      <tr><td class="m">SERVICE1</td><td><span class="tag pd">PD</span> service node</td><td class="m">.51</td><td class="m">–</td><td class="m">–</td><td>VRF A 192.168.11.100, B 192.168.22.100, C 192.168.13.100</td></tr>
+      <tr><td class="m">SERVICE2</td><td><span class="tag pd">PD</span> service node</td><td class="m">.52</td><td class="m">–</td><td class="m">–</td><td>VRF A 192.168.21.200, B 192.168.11.200, default 192.168.22.200</td></tr>
+      <tr><td class="m">SERVICE3</td><td><span class="tag wan">WAN</span> service node + ISP</td><td class="m">.53</td><td class="m">12085</td><td class="m">–</td><td>VRF A .11.254, B .61.254, D .111.254; VRF C is the ISP (1.1.1.1, 31.31.31.31)</td></tr>
+      <tr><td class="m">SERVICE4</td><td><span class="tag qa">QA</span> service node</td><td class="m">.54</td><td class="m">–</td><td class="m">–</td><td>VRF A 192.168.111.100, B 192.168.113.100, C 192.168.122.100</td></tr>
+    </tbody></table></div>
+  <p class="lede" style="margin-top:10px">Mgmt addresses are 172.31.11.x in VRF M on every node. Every leaf pair shares its MLAG VTEP on Loopback1 (10.250.10.x).</p>
+</section>
+
+<section>
+  <h2>EVPN services</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>VLAN</th><th>VNI</th><th>Where</th><th>Subnet / gateway</th><th>VRF</th><th>Hosts</th></tr></thead>
+    <tbody>
+      <tr><td class="m">11</td><td class="m">10011</td><td><span class="tag pd">PD</span> leaf1, leaf2, svcl · <span class="tag wan">WAN</span></td><td class="m">192.168.11.0/24 · .10</td><td class="m">PCS, WCS</td><td>SERVICE1 A, SERVICE2 B, SERVICE3 A. Stretched across the domain gateway (WAN uses RT 20011 locally)</td></tr>
+      <tr><td class="m">12</td><td class="m">10012</td><td><span class="tag pd">PD</span> leaf1</td><td class="m">192.168.12.0/24 · .10</td><td class="m">PCS</td><td>SERVICE1 (default VRF)</td></tr>
+      <tr><td class="m">13</td><td class="m">10013</td><td><span class="tag pd">PD</span> leaf1</td><td class="m">L2 only, no gateway</td><td class="m">–</td><td>SERVICE1 C</td></tr>
+      <tr><td class="m">21</td><td class="m">10021</td><td><span class="tag pd">PD</span> leaf2</td><td class="m">192.168.21.0/24 · .10</td><td class="m">PCS</td><td>SERVICE2 A</td></tr>
+      <tr><td class="m">22</td><td class="m">10022</td><td><span class="tag pd">PD</span> leaf1, leaf2</td><td class="m">192.168.22.0/24 · .10</td><td class="m">PCS</td><td>SERVICE1 B, SERVICE2</td></tr>
+      <tr><td class="m">31</td><td class="m">10031</td><td><span class="tag pd">PD</span> svcl</td><td class="m">192.168.31.0/24</td><td class="m">PCS</td><td>none</td></tr>
+      <tr><td class="m">61</td><td class="m">20061</td><td><span class="tag wan">WAN</span></td><td class="m">192.168.61.0/24</td><td class="m">WCS</td><td>SERVICE3 B</td></tr>
+      <tr><td class="m">111</td><td class="m">10111</td><td><span class="tag qa">QA</span> leaf1, svcl · <span class="tag wan">WAN</span></td><td class="m">192.168.111.0/24 · .10</td><td class="m">QACS, WCS</td><td>SERVICE4 A, SERVICE3 D. Stretched QA to WAN</td></tr>
+      <tr><td class="m">112</td><td class="m">10112</td><td><span class="tag qa">QA</span> leaf1</td><td class="m">192.168.112.0/24 · .10</td><td class="m">QACS</td><td>SERVICE4 A</td></tr>
+      <tr><td class="m">113</td><td class="m">10113</td><td><span class="tag qa">QA</span> leaf1</td><td class="m">L2 only, no gateway</td><td class="m">–</td><td>SERVICE4 B</td></tr>
+      <tr><td class="m">122</td><td class="m">10122</td><td><span class="tag qa">QA</span> leaf1</td><td class="m">192.168.122.0/24 · .10</td><td class="m">QACS</td><td>SERVICE4 C</td></tr>
+      <tr><td class="m">131</td><td class="m">10131</td><td><span class="tag qa">QA</span> svcl</td><td class="m">192.168.131.0/24</td><td class="m">QACS</td><td>none</td></tr>
+      <tr><td class="m">3702</td><td class="m">13702</td><td><span class="tag pd">PD</span> svcl (L2) · <span class="tag wan">WAN</span></td><td class="m">10.30.60.32/27</td><td class="m">WCS</td><td>PDFW1 outside .51, WANFAB .41 / .42</td></tr>
+      <tr><td class="m">3802</td><td class="m">13802</td><td><span class="tag qa">QA</span> svcl (L2) · <span class="tag wan">WAN</span></td><td class="m">10.130.60.32/27</td><td class="m">WCS</td><td>QAFW1 outside .51, WANFAB .41 / .42</td></tr>
+      <tr><td class="m">3703 / 3803</td><td class="m">–</td><td>svcl to firewall</td><td class="m">10.30.60.64/27 · 10.130.60.64/27</td><td class="m">PCS / QACS</td><td>firewall inside .81, svcl .71 / .72</td></tr>
+      <tr><td class="m">3701 / 3801</td><td class="m">–</td><td>svcl to WANFAB</td><td class="m">10.30.60.0/27 · 10.130.60.0/27</td><td class="m">default</td><td>underlay transit, WANFAB .1 / .2, svcl .11 / .12</td></tr>
+    </tbody></table></div>
+  <h3>L3 VNIs and route targets</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>VRF</th><th>L3 VNI</th><th>Exports</th><th>Imports</th></tr></thead>
+    <tbody>
+      <tr><td class="m">PCS (PD)</td><td class="m">30100</td><td class="m">10301:30100</td><td class="m">10301:30100, 10301:64999, 10301:30300</td></tr>
+      <tr><td class="m">QACS (QA)</td><td class="m">30300</td><td class="m">10301:30300</td><td class="m">10301:30300, 10301:64999, 10301:30100</td></tr>
+      <tr><td class="m">WCS (WAN)</td><td class="m">64999</td><td class="m">0/0 with 10301:64900, all else 10301:64999</td><td class="m">10301:64999, 10301:30100, 10301:30300</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Routing policy</h2>
+  <p class="lede">This decides which traffic crosses a firewall. Each fabric gets its default route only through its own firewall, but every specific route the WAN exports (RT 10301:64999) is imported straight into PCS and QACS. So traffic <i>leaving</i> a fabric skips its firewall when the destination is known, and traffic <i>entering</i> a fabric always goes through that fabric's firewall.</p>
+  <div class="scroll" style="margin-top:10px"><table>
+    <thead><tr><th>Device</th><th>Policy</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td>WANFAB1A/1B</td><td class="mono">RM_WCS_EXPORT</td><td>0/0 tagged 10301:64900, which no fabric imports; everything else tagged 10301:64999, which PCS and QACS import</td></tr>
+      <tr><td>WANFAB1A/1B</td><td class="mono">RM_PROD_FW_EXPORT / RM_QA_FW_EXPORT</td><td>only 0/0 is sent to PDFW1 / QAFW1 (each receives 1 prefix)</td></tr>
+      <tr><td>PDSVCL1A/1B</td><td class="mono">RM_PROD_FW_EXPORT</td><td>only PCS routes (EXC_PCS, RT 10301:30100) are sent to PDFW1</td></tr>
+      <tr><td>QASVCL1A/1B</td><td class="mono">RM_QA_FW_EXPORT</td><td>only QACS routes (EXC_QACS, RT 10301:30300) are sent to QAFW1</td></tr>
+      <tr><td>SERVICE3 (ISP)</td><td class="mono">RM_ISP_OUT</td><td>sends only its own routes: 0/0, 1.1.1.1/32 and the two link /30s (4 prefixes)</td></tr>
+      <tr><td>WANFAB1A/1B to ISP</td><td class="mono">INET_ISP (no outbound filter)</td><td>the ISP learns 36 prefixes per link, private 10.x, 172.30.x and 192.168.x included; local-as 100 no-prepend replace-as</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Verified flows</h2>
+  <p class="lede">Pings from the service nodes, checked against the design with <code>flows.sh</code> on the containerlab host. Paths come from traceroute.</p>
+  <div class="scroll" style="margin-top:10px"><table>
+    <thead><tr><th>#</th><th>From → to</th><th>Result</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="n">F1</td><td>SERVICE1 A → 192.168.11.200 (SERVICE2 B)</td><td><span class="pill ok">reaches</span></td><td>same VLAN 11, L2 VNI 10011 across leaf pairs</td></tr>
+      <tr><td class="n">F2</td><td>SERVICE1 A → 192.168.21.200 (SERVICE2 A)</td><td><span class="pill ok">reaches</span></td><td>routed in PCS, L3 VNI 30100, one hop (PDLEAF2A)</td></tr>
+      <tr><td class="n">F3</td><td>SERVICE1 B → 192.168.22.200 (SERVICE2)</td><td><span class="pill ok">reaches</span></td><td>VLAN 22, L2 VNI 10022</td></tr>
+      <tr><td class="n">F4</td><td>SERVICE1 A → 192.168.11.254 (SERVICE3 A)</td><td><span class="pill ok">reaches</span></td><td>VLAN 11 stretched PD → WAN through the domain gateway</td></tr>
+      <tr><td class="n">F5</td><td>SERVICE1 A → 192.168.61.254 (SERVICE3 B)</td><td><span class="pill ok">reaches</span></td><td>PDSVCL1A → WANFAB over EVPN; PDFW1 not crossed</td></tr>
+      <tr><td class="n">F6</td><td>SERVICE1 A → 1.1.1.1 (ISP)</td><td><span class="pill ok">reaches</span></td><td>1.1.1.1/32 imported into PCS (RT 64999): PDSVCL1A → WANFAB1B → ISP; PDFW1 not crossed</td></tr>
+      <tr><td class="n">F7</td><td>SERVICE1 A → 31.31.31.31 (ISP)</td><td><span class="pill ok">reaches</span></td><td>not advertised: default route PDSVCL1A → PDFW1 → WANFAB → ISP</td></tr>
+      <tr><td class="n">F8</td><td>SERVICE1 A → 192.168.111.100 (SERVICE4 A)</td><td><span class="pill ok">reaches</span></td><td>PD → QA: PDSVCL1B → WANFAB1A → QAFW1 → QASVCL1A; only QAFW1 crossed</td></tr>
+      <tr><td class="n">F9</td><td>SERVICE4 A → 192.168.21.200 (SERVICE2 A)</td><td><span class="pill ok">reaches</span></td><td>QA → PD: QASVCL1A → WANFAB1A → PDFW1 → PDSVCL1A; only PDFW1 crossed</td></tr>
+      <tr><td class="n">F10</td><td>SERVICE4 A → 192.168.111.254 (SERVICE3 D)</td><td><span class="pill ok">reaches</span></td><td>VLAN 111 stretched QA → WAN</td></tr>
+      <tr><td class="n">F11</td><td>SERVICE4 A → 1.1.1.1 (ISP)</td><td><span class="pill ok">reaches</span></td><td>imported into QACS; QAFW1 not crossed</td></tr>
+      <tr><td class="n">F12</td><td>SERVICE4 A → 31.31.31.31 (ISP)</td><td><span class="pill ok">reaches</span></td><td>default route QASVCL1A → QAFW1 → WANFAB1A → ISP</td></tr>
+      <tr><td class="n">F13</td><td>SERVICE4 C → 192.168.11.100 (SERVICE1 A)</td><td><span class="pill ok">reaches</span></td><td>QA VLAN 122 → WANFAB1A → PDFW1 → PDSVCL1A</td></tr>
+      <tr><td class="n">F14</td><td>ISP (SERVICE3 C) → 192.168.11.100</td><td><span class="pill ok">reaches</span></td><td>the internet side reaches a PD host: WANFAB1B → PDFW1 → PDSVCL1A</td></tr>
+      <tr><td class="n">F15</td><td>SERVICE1 C → 192.168.13.10</td><td><span class="pill no">no reply</span></td><td>VLAN 13 is L2 only, no gateway</td></tr>
+      <tr><td class="n">F16</td><td>SERVICE4 B → 192.168.113.10</td><td><span class="pill no">no reply</span></td><td>VLAN 113 is L2 only, no gateway</td></tr>
+      <tr><td class="n">F17</td><td>SERVICE1 A → 172.30.10.200 (SERVICE2 loopback)</td><td><span class="pill no">no reply</span></td><td>service-node loopbacks are not advertised</td></tr>
+    </tbody></table></div>
+</section>
+
+<section class="todo">
+  <h2>Quirks in the lab (good test material)</h2>
+  <ul>
+    <li>QAFW1 Ethernet1/2 descriptions say <code>WANFAB1A/1B:Eth8</code>; they are cabled to QASVCL1A/1B Eth7.</li>
+    <li>PDSPINE2 Eth5 says <code>SPINE2-LEAF3A</code> and its BGP neighbor says PDLEAF3A; it is PDSVCL1A. QASPINE2 has the same with QALEAF3A.</li>
+    <li>On WANFAB1A/1B, the BGP descriptions for 10.25.10.32 and 10.25.10.132 say <code>…1A_OL</code>; they are the 1B service leafs.</li>
+    <li>WANFAB Eth9 says <code>SERVICE1:Eth1</code> (it is SERVICE3); SERVICE3 Eth2 says <code>PDLEAF2B:eth5</code> (it is WANFAB1B Eth9).</li>
+    <li>PDLEAF2A/2B Eth5 and Po21 name SERVICE1 / CSR1; the node there is SERVICE2.</li>
+    <li>The image tag is <code>ceos:4336m</code>, but the nodes report EOS 4.35.2F.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Service nodes and checks</h2>
+  <div class="cols">
+    <div class="mode"><b>Service nodes are cEOS</b><br>Each VRF acts as one host and maps to a Linux namespace (<code>ns-A</code>, <code>ns-B</code>, …). Ping and traceroute only: no iperf or web servers.</div>
+    <div class="mode"><b>Reaching devices</b><br>Over eAPI or SSH on 172.31.11.x, login admin / admin. Mark the PD devices PRODUCTION in your NAVIGATOR inventory, so changes there are refused.</div>
+  </div>
+  <div class="scroll" style="margin-top:12px"><table>
+    <thead><tr><th>On the containerlab host, in the lab folder</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">bash flows.sh</td><td>17 pass/fail flow tests (pings only, changes nothing)</td></tr>
+      <tr><td class="mono">docker exec -it clab-evpn_e2e-QALEAF1A Cli</td><td>EOS CLI on a node</td></tr>
+      <tr><td class="mono">docker exec clab-evpn_e2e-SERVICE1 ip netns exec ns-A traceroute -n 1.1.1.1</td><td>traceroute from the host in SERVICE1 VRF A</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Chat test cases</h2>
+  <div class="cols">
+    <div class="mode"><b>CLOUD</b><br>Project <code>EVPN_CLOUD</code>: the chat runs on a cloud model</div>
+    <div class="mode"><b>LOCAL</b><br>Project <code>EVPN_LOCAL</code>: device data stays on your network</div>
+  </div>
+  <h3>Start</h3>
+  <blockquote>New project EVPN_CLOUD, CLOUD, inventory EVPN_LAB, job: EVPN health and path review of the Arista EVPN Fabric lab.</blockquote>
+  <div class="scroll" style="margin-top:12px"><table>
+    <thead><tr><th>#</th><th>Ask the bot</th><th>Correct answer</th></tr></thead>
+    <tbody>
+      <tr><td class="n">E0.1</td><td>Show BGP summary, all VRFs and EVPN, on every device in the project.</td><td>148 of 148 sessions Established</td></tr>
+      <tr><td class="n">E0.2</td><td>Check MLAG on all leaf pairs.</td><td>6 pairs active, connected, peer link up</td></tr>
+      <tr><td class="n">E1.1</td><td>VNI to VLAN and VRF map across the leafs. Flag anything odd.</td><td>the EVPN services table; VLAN 13 and 113 have no gateway; VLAN 11 uses RT 20011 on the WAN side</td></tr>
+      <tr><td class="n">E1.2</td><td>Which remote VTEPs does PDLEAF1A see?</td><td>6: 10.25.10.21, .22, .31, .32 (unicast), 10.250.10.20 (unicast, flood), 10.250.10.30 (flood)</td></tr>
+      <tr><td class="n">E1.3</td><td>How do the PD and QA fabrics exchange EVPN routes?</td><td>never directly: WANFAB1A/1B are the EVPN domain gateway (domains 10301:10000, 10301:30000, 10301:64999)</td></tr>
+      <tr><td class="n">E1.4</td><td>Does SERVICE1 traffic to 1.1.1.1 cross PDFW1? And to 31.31.31.31?</td><td>1.1.1.1 no (imported with RT 10301:64999); 31.31.31.31 yes (default route)</td></tr>
+      <tr><td class="n">E1.5</td><td>Trace 192.168.11.100 to 192.168.111.100 hop by hop and name every firewall.</td><td>PDSVCL1B → WANFAB1A → QAFW1 → QASVCL1A; only QAFW1</td></tr>
+      <tr><td class="n">E1.6</td><td>And the way back from QA to PD?</td><td>QASVCL → WANFAB → PDFW1 → PDSVCL: each fabric's firewall only on the way in</td></tr>
+      <tr><td class="n">E1.7</td><td>What does the ISP learn from us?</td><td>36 prefixes per link, private ranges included: no outbound filter on WANFAB toward the ISP</td></tr>
+      <tr><td class="n">E1.8</td><td>What does PDFW1 receive from the WAN fabric, and why?</td><td>only 0/0, because of RM_PROD_FW_EXPORT on WANFAB</td></tr>
+      <tr><td class="n">E1.9</td><td>SERVICE1 VRF C cannot reach 192.168.13.10. Why?</td><td>VLAN 13 is L2-only VNI 10013, no SVI anywhere</td></tr>
+      <tr><td class="n">E2.1</td><td>Compare interface and BGP descriptions with LLDP. List mismatches.</td><td>the quirks list above</td></tr>
+      <tr><td class="n">E3.1</td><td>Draw the topology from LLDP, with fabrics and firewalls.</td><td>diagram file in the project</td></tr>
+      <tr><td class="n">E3.2</td><td>Excel of VLAN, VNI, VRF and route targets per device.</td><td>.xlsx in OUT/</td></tr>
+      <tr><td class="n">E4.1</td><td>Add description "CHAT-TEST" to Loopback0 on QALEAF1A.</td><td>proposed, approved with <code>/pushok</code>, applied and verified</td></tr>
+      <tr><td class="n">E4.2</td><td>Make the same change on PDLEAF1A.</td><td>refused: PRODUCTION device</td></tr>
+    </tbody></table></div>
+  <p class="lede" style="margin-top:10px">Read-only questions can run on any device. Changes only on QA devices, each one approved with <code>/pushok</code>.</p>
+</section>
+</main>
+</html>

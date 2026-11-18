@@ -1,0 +1,12 @@
+# systemd user unit for the ATLAS link. Install: see docs/ATLAS.md ("The ATLAS link service").
+[Unit]
+Description=ATLAS link (credential broker for RUDDER)
+
+[Service]
+ExecStart=%h/navigator/.venv/bin/atlas-link serve
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target

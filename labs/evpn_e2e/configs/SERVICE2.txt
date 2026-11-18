@@ -1,0 +1,180 @@
+!
+hostname SERVICE2
+!
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management console
+   idle-timeout 30
+!
+management api gnmi
+   transport grpc default
+      vrf M
+!
+management api netconf
+   transport ssh default
+      vrf M
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+!
+spanning-tree mode mstp
+!
+ip name-server vrf M 8.8.4.4
+ip name-server vrf M 8.8.8.8
+!
+service routing protocols model multi-agent
+!
+!
+interface Management0
+   description Out-of-Band/OOB Interface via CLAB
+   vrf M
+   ip address 172.31.11.52/24
+   exit
+!
+!
+ip route vrf M 0.0.0.0/0 172.31.11.1
+!
+ntp local-interface vrf M Management0
+ntp server vrf M 0.pool.ntp.org prefer
+ntp server vrf M 2.pool.ntp.org
+!
+
+
+
+! ********** COMMON ***********
+!
+interface Port-Channel10
+   description LEAF2A & LEAF2B
+   no switchport
+   no shutdown 
+!
+interface Ethernet1
+   description "DC1LEAF2A:eth5"
+   channel-group 10 mode active
+   no shutdown
+   exit
+!
+interface Ethernet2
+   description "DC1LEAF2B:eth5"
+   channel-group 10 mode active
+   no shutdown
+   exit
+!
+vlan 11,21-22
+  exit 
+!
+
+!
+! ********** COMMON ***********
+
+! ********** A ***********
+!
+vrf instance A
+!
+ip routing vrf A
+!
+interface Loopback1
+   vrf A
+   ip address 172.30.10.200/32
+   exit
+!
+!
+interface Port-channel10.12
+   encapsulation dot1Q vlan 12
+   vrf  A
+   ip address 192.168.12.200/24
+   ip pim sparse-mode
+   no shutdown
+   exit
+!
+interface Port-channel10.21
+   encapsulation dot1Q vlan 21
+   vrf A
+   ip address 192.168.21.200/24
+   ip pim sparse-mode
+   no shutdown
+   exit
+!
+!
+interface Port-channel10.22
+   encapsulation dot1Q vlan 22
+   vrf  A
+   ip address 192.168.22.200/24
+   ip pim sparse-mode
+   no shutdown
+   exit
+!
+!
+router ospf 100 vrf A
+   router-id 172.30.10.200
+   network 172.30.10.200/32 area 0.0.0.0
+   network 192.168.12.200/32 area 0.0.0.0
+   network 192.168.21.200/32 area 0.0.0.0
+   network 192.168.22.200/32 area 0.0.0.0
+   exit
+!
+! *** Remove the OSPF & add static route ***
+no router ospf 100 vrf A
+!
+ip route vrf A 0.0.0.0/0 192.168.21.10
+!
+! ********** A ***********
+
+! ********** B ***********
+!
+vrf instance B
+!
+ip routing vrf B
+!
+!
+interface Loopback2
+   vrf B
+   ip address 172.30.20.200/32
+   exit
+!
+!
+interface Port-channel10.11
+   encapsulation dot1Q vlan 11
+   vrf B
+   ip address 192.168.11.200/24
+   ip pim sparse-mode
+   no shutdown
+   exit
+!
+router ospf 200 vrf B
+   router-id 172.30.20.200
+   network 172.30.20.200/32 area 0.0.0.0
+   network 192.168.21.200/32 area 0.0.0.0
+   network 192.168.22.200/32 area 0.0.0.0
+   exit
+!
+! *** Remove the OSPF & add static route ***
+no router ospf 200 vrf B
+!
+ip route vrf B 0.0.0.0/0 192.168.11.10
+!
+! ********** B ***********
+
+!
+end 
+!
+

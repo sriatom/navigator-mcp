@@ -1,0 +1,15 @@
+# systemd user unit for RUDDER's change scheduler. Install: see docs/SCHEDULER.md.
+[Unit]
+Description=RUDDER scheduler (applies approved, scheduled changes)
+After=atlas-link.service
+Wants=atlas-link.service
+
+[Service]
+ExecStart=%h/navigator/.venv/bin/rudder-scheduler run
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target

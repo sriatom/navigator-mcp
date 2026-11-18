@@ -1,0 +1,31 @@
+admin@nyc-pa-fw01(active)> set cli config-output-format set
+admin@nyc-pa-fw01(active)> configure
+admin@nyc-pa-fw01(active)# show
+set deviceconfig system hostname nyc-pa-fw01
+set deviceconfig system domain corp.globex.com
+set deviceconfig system ip-address 10.10.255.41
+set deviceconfig system login-banner "Globex Corp - authorized use only - call Jane Smith"
+set deviceconfig system snmp-setting snmp-system location "NYC HQ IDF-3"
+set deviceconfig system snmp-setting snmp-system contact "noc@globex.com"
+set deviceconfig system snmp-setting access-setting version v2c snmp-community-string Gl0bexPANro
+set mgt-config users admin phash $5$abcdefgh$IJKLMNOPQRSTUVWXYZ0123456789abcdefghijklm
+set mgt-config users dchen phash $5$ijklmnop$QRSTUVWXYZ0123456789abcdefghijklmnopqrstu
+set mgt-config users dchen permissions role-based superuser yes
+set shared server-profile tacplus GLOBEX-TACACS server ise1 address 10.10.1.30
+set shared server-profile tacplus GLOBEX-TACACS server ise1 secret -AQ==Zm9vYmFyYmF6cXV4MTIzNDU2Nzg5MA==
+set shared authentication-profile GLOBEX-AUTH method tacplus server-profile GLOBEX-TACACS
+set network interface ethernet ethernet1/1 layer3 ip 203.0.113.66/29
+set network interface ethernet ethernet1/1 comment "ISP Cogent circuit 1-2345-678"
+set network ike gateway GW-ACME authentication pre-shared-key key -AQ==c2VjcmV0cHNrZm9yYWNtZQ==
+set network ike gateway GW-ACME peer-address ip 93.184.216.10
+set zone untrust network layer3 ethernet1/1
+set rulebase security rules "Allow ACME SFTP" from untrust to trust source 93.184.216.0/24 application ssh action allow
+set rulebase security rules "Allow ACME SFTP" description "Requested by Jane Smith CHG004411"
+set address GLOBEX-SFTP-01 ip-netmask 10.10.20.22/32
+admin@nyc-pa-fw01(active)# exit
+admin@nyc-pa-fw01(active)> show system info
+hostname: nyc-pa-fw01
+ip-address: 10.10.255.41
+mac-address: 00:1b:17:00:aa:01
+serial: 012801099999
+sw-version: 11.1.4-h7

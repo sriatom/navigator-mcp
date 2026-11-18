@@ -1,0 +1,378 @@
+# Cisco: allowed read commands by category (moved from atlas_inventory/catalog/COMMANDS.yml).
+IOSXE:
+  system:
+  - show version
+  - show inventory
+  - show inventory raw
+  - show platform
+  - show platform resources
+  - show platform software status control-processor brief
+  - show processes cpu
+  - show processes cpu sorted
+  - show processes memory
+  - show memory statistics
+  - show environment all
+  - show environment temperature
+  - show environment power
+  - show boot
+  - show clock
+  - show ntp status
+  - show ntp associations
+  - show running-config
+  - show startup-config
+  - show license
+  - show license summary
+  - show license status
+  - show logging
+  - show logging last 100
+  - show users
+  - show history
+  interfaces:
+  - show interfaces
+  - show interfaces summary
+  - show interfaces status
+  - show interfaces counters
+  - show interfaces description
+  - show interfaces GigabitEthernet0/0/0
+  - show ip interface brief
+  - show ip interface
+  - show ipv6 interface brief
+  - show ipv6 interface
+  - show interface trunk
+  - show interfaces switchport
+  - show interfaces capabilities
+  - show etherchannel summary
+  - show etherchannel detail
+  - show etherchannel load-balance
+  - show lacp neighbor
+  - show lacp internal
+  - show cdp neighbors
+  - show cdp neighbors detail
+  - show lldp neighbors
+  - show lldp neighbors detail
+  - show transceiver detail
+  - show controllers
+  vlans:
+  - show vlan
+  - show vlan brief
+  - show vlan id 1
+  - show mac address-table
+  - show mac address-table dynamic
+  - show mac address-table count
+  - show spanning-tree
+  - show spanning-tree brief
+  - show spanning-tree vlan 1
+  - show spanning-tree detail
+  - show spanning-tree summary
+  routing:
+  - show ip route
+  - show ip route summary
+  - show ip route bgp
+  - show ip route ospf
+  - show ip route eigrp
+  - show ip route static
+  - show ip route vrf all
+  - show ipv6 route
+  - show ipv6 route summary
+  - show ip arp
+  - show ip arp vrf all
+  - show vrf
+  - show vrf detail
+  - show ip cef
+  - show ip cef detail
+  - show ip cef summary
+  - show adjacency
+  - show adjacency detail
+  - show vrf brief
+  - show ip vrf interfaces
+  bgp:
+  - show bgp summary
+  - show ip bgp summary
+  - show ip bgp ipv4 unicast summary
+  - show ip bgp ipv6 unicast summary
+  - show ip bgp
+  - show ip bgp neighbors
+  - show ip bgp neighbors <peer> advertised-routes
+  - show ip bgp neighbors <peer> received-routes
+  - show ip bgp neighbors <peer> routes
+  - show ip bgp vrf all summary
+  - show bgp process
+  - show bgp all summary
+  - show ip bgp regexp
+  ospf:
+  - show ip ospf
+  - show ip ospf summary-address
+  - show ip ospf neighbor
+  - show ip ospf neighbor detail
+  - show ip ospf interface
+  - show ip ospf interface brief
+  - show ip ospf database
+  - show ip ospf database router
+  - show ip ospf database network
+  - show ip ospf database summary
+  - show ip ospf database external
+  - show ip ospf flood-list
+  - show ip ospf statistics
+  - show ip ospf traffic
+  - show ospfv3
+  - show ospfv3 neighbor
+  - show ospfv3 database
+  eigrp:
+  - show ip eigrp neighbors
+  - show ip eigrp neighbors detail
+  - show ip eigrp topology
+  - show ip eigrp topology all-links
+  - show ip eigrp interfaces
+  - show ip eigrp traffic
+  - show ip eigrp timers
+  mpls:
+  - show mpls forwarding-table
+  - show mpls ldp neighbor
+  - show mpls ldp bindings
+  - show mpls ldp discovery
+  - show mpls ldp parameters
+  - show mpls interfaces
+  - show mpls traffic-eng tunnels
+  - show mpls traffic-eng topology
+  - show ip rsvp session
+  - show ip rsvp neighbor
+  acl:
+  - show ip access-lists
+  - show ip access-lists <acl-name>
+  - show ipv6 access-list
+  - show access-session
+  - show access-session summary
+  qos:
+  - show policy-map
+  - show policy-map interface
+  - show class-map
+  - show queue
+  - show mls qos
+  - show mls qos interface
+  multicast:
+  - show ip mroute
+  - show ip mroute summary
+  - show ip pim neighbor
+  - show ip pim interface
+  - show ip pim rp mapping
+  - show ip igmp groups
+  - show ip igmp interface
+  security:
+  - show aaa servers
+  - show aaa sessions
+  - show radius server-group all
+  - show tacacs
+  - show ip ssh
+  - show crypto key mypubkey rsa
+  - show crypto isakmp sa
+  - show crypto ipsec sa
+  - show crypto map
+  nat:
+  - show ip nat translations
+  - show ip nat translations verbose
+  - show ip nat statistics
+  sdwan:
+  - show sdwan system status
+  - show sdwan control connections
+  - show sdwan bfd sessions
+  - show sdwan omp summary
+  - show sdwan omp routes
+  - show sdwan omp peers
+  - show sdwan policy from-vsmart
+  - show sdwan app-route statistics
+  - show sdwan control local-properties
+  - show sdwan control connection-history
+  - show sdwan omp tlocs
+  - show sdwan running-config
+# ARISTA_EOS: in the Arista vendor pack (navigator_packs/arista/commands.yml)
+NXOS:
+  system:
+  - show version
+  - show hostname
+  - show inventory
+  - show module
+  - show boot
+  - show environment
+  - show environment temperature
+  - show environment power
+  - show environment fan
+  - show system resources
+  - show system uptime
+  - show ntp status
+  - show ntp peers
+  - show clock
+  - show logging
+  - show logging last 100
+  - show running-config
+  - show startup-config
+  - show license
+  - show license usage
+  - show users
+  - show accounting log
+  interfaces:
+  - show interface
+  - show interface brief
+  - show interface status
+  - show interface counters
+  - show interface counters errors
+  - show interface ethernet 1/1
+  - show interface trunk
+  - show interface switchport
+  - show interface capabilities
+  - show interface transceiver
+  - show interface transceiver details
+  - show port-channel summary
+  - show port-channel compatibility-parameters
+  - show vpc
+  - show vpc peer-keepalive
+  - show vpc consistency-parameters global
+  - show lacp neighbor
+  - show lacp interface
+  - show cdp neighbors
+  - show cdp neighbors detail
+  vlans:
+  - show vlan
+  - show vlan brief
+  - show vlan id 1
+  - show vlan all-ports
+  - show mac address-table
+  - show mac address-table dynamic
+  - show mac address-table count
+  - show spanning-tree
+  - show spanning-tree brief
+  - show spanning-tree vlan 1
+  - show spanning-tree detail
+  - show spanning-tree root
+  routing:
+  - show ip route
+  - show ip route summary
+  - show ip route bgp
+  - show ip route ospf
+  - show ip route static
+  - show ip route vrf all
+  - show ipv6 route
+  - show ipv6 route summary
+  - show ip arp
+  - show ip arp detail
+  - show ip arp vrf all
+  - show vrf
+  - show vrf all detail
+  - show ip interface brief
+  - show ipv6 interface brief
+  - show ip interface brief vrf all
+  - show ipv6 interface brief vrf all
+  - show vrf interface
+  bgp:
+  - show bgp summary
+  - show bgp ipv4 unicast summary
+  - show bgp ipv6 unicast summary
+  - show bgp ipv4 unicast
+  - show bgp ipv4 unicast neighbors
+  - show bgp ipv4 unicast neighbors <peer> advertised-routes
+  - show bgp ipv4 unicast neighbors <peer> received-routes
+  - show bgp ipv4 unicast neighbors <peer> routes
+  - show bgp process
+  - show bgp peer-template
+  - show bgp vrf all summary
+  - show bgp l2vpn evpn summary
+  - show bgp l2vpn evpn
+  - show bgp convergence
+  ospf:
+  - show ip ospf
+  - show ip ospf summary
+  - show ip ospf neighbors
+  - show ip ospf neighbors detail
+  - show ip ospf interface
+  - show ip ospf interface brief
+  - show ip ospf database
+  - show ip ospf database summary
+  - show ip ospf database router
+  - show ip ospf database network
+  - show ip ospf database external
+  - show ip ospf statistics
+  - show ip ospf traffic
+  evpn_vxlan:
+  - show nve peers
+  - show nve vni
+  - show nve vni ingress-replication
+  - show nve interface
+  - show l2route evpn mac all
+  - show l2route evpn mac-ip all
+  - show bgp l2vpn evpn summary
+  - show bgp l2vpn evpn route-type 2
+  - show bgp l2vpn evpn route-type 3
+  - show bgp l2vpn evpn route-type 5
+  - show fabric forwarding evpn gateway
+  acl:
+  - show ip access-lists
+  - show ip access-lists <acl-name>
+  - show ipv6 access-list
+  - show ip access-list summary
+  qos:
+  - show policy-map
+  - show policy-map interface
+  - show class-map
+  - show queuing interface
+  - show queueing interface
+  multicast:
+  - show ip mroute
+  - show ip mroute summary
+  - show ip pim neighbor
+  - show ip pim interface
+  - show ip pim rp
+  - show ip igmp groups
+  - show ip igmp snooping
+  mpls:
+  - show mpls forwarding-table
+  - show mpls label range
+  - show ip rsvp session
+  - show ip rsvp neighbor
+  - show ip rsvp interface
+  hardware:
+  - show hardware
+  - show hardware capacity
+  - show hardware profile status
+  - show platform
+  - show platform fwm info
+  - show platform internal kernel netdev
+  - show forwarding ipv4 route
+  - show forwarding adjacency
+  security:
+  - show aaa authentication login
+  - show radius-server
+  - show tacacs-server
+  - show crypto key mypubkey rsa
+  - show role
+  - show role feature
+  - show copp status
+  - show copp statistics
+VIPTELA:
+  system:
+  - show system status
+  - show devices
+  - show controllers
+  - show wan edge list
+  - show certificates
+  - show ntp associations
+  - show alarms
+  control:
+  - show control local-properties
+  - show control connections
+  - show control connection-history
+  - show orchestrator connections
+  omp:
+  - show omp peers
+  - show omp routes
+  - show omp tlocs
+  bfd:
+  - show bfd sessions
+  interfaces:
+  - show interface
+  - show arp
+  routing:
+  - show interface
+  - show ip route
+  config:
+  - show running-config
+# FortiGate through the fortinet-mcp server (P5): "commands" are its read tools; an optional second
+# word is the VDOM (e.g. "fgt_get_routes root").

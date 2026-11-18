@@ -1,0 +1,28 @@
+# Fortinet FortiGate firewalls (FortiOS): vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: fortinet
+vendor: FORTINET
+description: Fortinet FortiGate firewalls (FortiOS)
+platforms:
+  FORTIOS:
+    vendor: FORTINET
+    aliases:
+    - FORTINET
+    - FORTIGATE
+    netmiko: fortinet
+    ansible: fortinet.fortios.fortios
+    conn:
+    - API
+    - SSH
+    reads: delegated:fortinet
+    writes: delegated:fortinet
+    validators:
+    - batfish
+methods:
+  fortinet:
+    adapter: delegated:fortinet
+    conn: API
+    port: 443
+    note: the fortinet MCP server (FortiGate REST /api/v2); commands are its tool names
+template_examples:
+  fortinet: FGT1

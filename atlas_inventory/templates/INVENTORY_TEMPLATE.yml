@@ -1,0 +1,238 @@
+# INVENTORY_<NAME>.yml — ATLAS inventory template: a sample EVPN fabric (spine, leaf, service leaf), then
+# ONE EXAMPLE PER VENDOR AND CONNECTION METHOD (copy the ones you need, delete the rest).
+# Save as DATA_PATH/INVENTORY_<NAME>.yml, or load it with interview_start(topic="bulk_import").
+# Rules:
+# - Never put a password, key or community here: CREDENTIAL is only a TAG from CREDENTIALS.yml.
+# - Mandatory per device: DEVICE_ID, DEVICE_NAME, DEVICE_ADDR, CREDENTIAL, VENDOR, OS, CONN_TYPE, PORT, IS_ENABLED.
+# - OS / VENDOR / CONN_TYPE come from the platform catalogue (platform_list): e.g. ARISTA_EOS, IOSXE, NXOS,
+#   PANOS, VIPTELA, FORTIOS; CONN_TYPE e.g. EAPI (443), SSH (22), VMANAGE_API (443), API (443).
+#   The vendor packs (navigator_packs/<vendor>/pack.yml) list each vendor's methods and fields.
+# - TAGS are free-form but SITE, FAB and ROLE are understood by selectors:
+#   inventory_show(groups=["SPINE"]) / device_read(groups=["SERVICE_LEAF"]) match on ROLE, SITE or FAB.
+# - IS_ENABLED: false keeps a record but hides it from every tool.
+# - PRODUCTION in ROLE marks a device as production (extra checks before any change).
+# Addresses below are documentation addresses (192.0.2.0/24): replace them with yours.
+
+META:
+  DESCRIPTION: Sample EVPN fabric (1 spine, 2 leaves, 2 service leaves)
+  DEFAULTS: {CREDENTIAL: FABRIC_LOGIN, VENDOR: ARISTA, OS: ARISTA_EOS, CONN_TYPE: EAPI, PORT: 443}
+
+INVENTORY:
+  -
+    DEVICE_ID: PDSPINE1
+    DEVICE_NAME: 'PDSPINE1'
+    DEVICE_ADDR: '192.0.2.10'
+    CREDENTIAL: FABRIC_LOGIN
+    VENDOR: ARISTA
+    OS: ARISTA_EOS
+    CONN_TYPE: EAPI
+    PORT: 443
+    IS_ENABLED: true
+    TAGS:
+      SITE: CH5
+      FAB: PROD_DR
+      ROLE:
+        - PD
+        - PRODUCTION
+        - SPINE
+        - EVPN
+  -
+    DEVICE_ID: PDLEAF1A
+    DEVICE_NAME: 'PDLEAF1A'
+    DEVICE_ADDR: '192.0.2.11'
+    CREDENTIAL: FABRIC_LOGIN
+    VENDOR: ARISTA
+    OS: ARISTA_EOS
+    CONN_TYPE: EAPI
+    PORT: 443
+    IS_ENABLED: true
+    TAGS:
+      SITE: CH5
+      FAB: PROD_DR
+      ROLE:
+        - PD
+        - PRODUCTION
+        - LEAF
+        - EVPN
+  -
+    DEVICE_ID: PDLEAF1B
+    DEVICE_NAME: 'PDLEAF1B'
+    DEVICE_ADDR: '192.0.2.12'
+    CREDENTIAL: FABRIC_LOGIN
+    VENDOR: ARISTA
+    OS: ARISTA_EOS
+    CONN_TYPE: EAPI
+    PORT: 443
+    IS_ENABLED: true
+    TAGS:
+      SITE: CH5
+      FAB: PROD_DR
+      ROLE:
+        - PD
+        - PRODUCTION
+        - LEAF
+        - EVPN
+  -
+    DEVICE_ID: PDSVCL1A
+    DEVICE_NAME: 'PDSVCL1A'
+    DEVICE_ADDR: '192.0.2.61'
+    CREDENTIAL: FABRIC_LOGIN
+    VENDOR: ARISTA
+    OS: ARISTA_EOS
+    CONN_TYPE: EAPI
+    PORT: 443
+    IS_ENABLED: true
+    TAGS:
+      SITE: CH5
+      FAB: PROD_DR
+      ROLE:
+        - PD
+        - PRODUCTION
+        - SERVICE_LEAF
+        - EVPN
+  -
+    DEVICE_ID: PDSVCL1B
+    DEVICE_NAME: 'PDSVCL1B'
+    DEVICE_ADDR: '192.0.2.32'
+    CREDENTIAL: FABRIC_LOGIN
+    VENDOR: ARISTA
+    OS: ARISTA_EOS
+    CONN_TYPE: SSH
+    PORT: 22
+    IS_ENABLED: false          # example: kept in the file, hidden from tools
+    TAGS:
+      SITE: CH5
+      FAB: PROD_DR
+      ROLE:
+        - PD
+        - PRODUCTION
+        - SERVICE_LEAF
+        - EVPN
+
+  # ---------------------------------------------------------------------------------------------------------
+  # One example per vendor and connection method. Arista: eAPI = PDSPINE1 above, SSH = PDSVCL1B above
+  # (SSH reads only; Arista changes need a CONN_TYPE EAPI record).
+  -
+    DEVICE_ID: CORE-RTR1       # Cisco IOS-XE over SSH: reads via pyATS (default) or via=ssh; changes over SSH
+    DEVICE_NAME: 'CORE-RTR1'
+    DEVICE_ADDR: '192.0.2.60'
+    CREDENTIAL: CISCO_LOGIN
+    VENDOR: CISCO
+    OS: IOSXE
+    CONN_TYPE: SSH
+    PORT: 22
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [CORE, ROUTER]}
+  -
+    DEVICE_ID: DC-NX1          # Cisco NX-OS over SSH: reads via pyATS (default) or via=ssh; changes over SSH
+    DEVICE_NAME: 'DC-NX1'
+    DEVICE_ADDR: '192.0.2.31'
+    CREDENTIAL: CISCO_LOGIN
+    VENDOR: CISCO
+    OS: NXOS
+    CONN_TYPE: SSH
+    PORT: 22
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [DC, SWITCH]}
+  -
+    DEVICE_ID: FW1             # Palo Alto PAN-OS: reads over SSH (PORT); changes over the XML API (API_PORT)
+    DEVICE_NAME: 'FW1'
+    DEVICE_ADDR: '192.0.2.62'
+    CREDENTIAL: PANOS_LOGIN
+    VENDOR: PALOALTO
+    OS: PANOS
+    CONN_TYPE: SSH
+    PORT: 22
+    API_PORT: 443
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [FIREWALL]}
+  -
+    DEVICE_ID: FW1-API         # Palo Alto PAN-OS over the XML API: reads as JSON; changes over the same API
+    DEVICE_NAME: 'FW1-API'
+    DEVICE_ADDR: '192.0.2.67'
+    CREDENTIAL: PANOS_LOGIN
+    VENDOR: PALOALTO
+    OS: PANOS
+    CONN_TYPE: XML_API
+    PORT: 443
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [FIREWALL]}
+  -
+    DEVICE_ID: SDWAN-MGR1      # Cisco SD-WAN Manager (vManage) over its REST API: reads for the whole overlay
+    DEVICE_NAME: 'SDWAN-MGR1'
+    DEVICE_ADDR: '192.0.2.63'
+    CREDENTIAL: SDWAN_API
+    VENDOR: CISCO
+    OS: VIPTELA
+    CONN_TYPE: VMANAGE_API
+    PORT: 443
+    SYSTEM_IP: '10.255.255.1'
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [SDWAN, CONTROLLER]}
+  -
+    DEVICE_ID: SDWAN-MGR1-SSH  # the SD-WAN Manager's own CLI over SSH (text); a record of its own
+    DEVICE_NAME: 'SDWAN-MGR1-SSH'
+    DEVICE_ADDR: '192.0.2.66'
+    CREDENTIAL: SDWAN_API
+    VENDOR: CISCO
+    OS: VIPTELA
+    CONN_TYPE: SSH
+    PORT: 22
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [SDWAN, CONTROLLER]}
+  -
+    DEVICE_ID: BR1-CEDGE       # Cisco SD-WAN edge (cEdge, IOS-XE) over SSH; SYSTEM_IP links it to vManage
+    DEVICE_NAME: 'BR1-CEDGE'
+    DEVICE_ADDR: '192.0.2.64'
+    CREDENTIAL: CISCO_LOGIN
+    VENDOR: CISCO
+    OS: IOSXE
+    CONN_TYPE: SSH
+    PORT: 22
+    SYSTEM_IP: '10.255.20.1'
+    IS_ENABLED: true
+    TAGS: {SITE: BR1, ROLE: [SDWAN, EDGE]}
+  -
+    DEVICE_ID: FGT1            # Fortinet FortiGate over its REST API (the fortinet MCP server)
+    DEVICE_NAME: 'FGT1'
+    DEVICE_ADDR: '192.0.2.65'
+    CREDENTIAL: FORTI_API
+    VENDOR: FORTINET
+    OS: FORTIOS
+    CONN_TYPE: API
+    PORT: 443
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [FIREWALL]}
+  -
+    DEVICE_ID: FRR1            # a multivendor platform (here FRR) over SSH, through the multivendor MCP server
+    DEVICE_NAME: 'FRR1'
+    DEVICE_ADDR: '192.0.2.68'
+    CREDENTIAL: CISCO_LOGIN
+    VENDOR: FRR
+    OS: FRR
+    CONN_TYPE: SSH
+    PORT: 22
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [ROUTER]}
+  -
+    DEVICE_ID: JUMP1           # a Linux host (generic pack): reads over SSH, text
+    DEVICE_NAME: 'JUMP1'
+    DEVICE_ADDR: '192.0.2.69'
+    CREDENTIAL: CISCO_LOGIN
+    VENDOR: LINUX
+    OS: LINUX
+    CONN_TYPE: SSH
+    PORT: 22
+    IS_ENABLED: true
+    TAGS: {SITE: CH5, ROLE: [JUMPHOST]}
+  # Not built yet: IOS-XE NETCONF / RESTCONF and NX-OS NX-API (later in the Cisco pack).
+  # Packs whose MCP server is not installed yet (no example): Juniper (Junos), Aruba (AOS-CX), F5 (BIG-IP),
+  # Check Point (Gaia).
+
+# Optional: controllers (vManage, Panorama, APIC, ...) and out-of-band (console servers, BMCs).
+CONTROLLERS:
+  - {NAME: VMANAGE1, URL: 'https://192.0.2.21', VENDOR: CISCO, PRODUCT: VMANAGE, CREDENTIAL: SDWAN_API,
+     IS_ENABLED: false, TAGS: {SITE: CH5, ROLE: [SDWAN]}}
+OOB:
+  - {NAME: CONSOLE1, ADDR: '192.0.2.250', TYPE: CONSOLE, VENDOR: OPENGEAR, CREDENTIAL: OOB_LOGIN,
+     IS_ENABLED: false, TAGS: {SITE: CH5}}

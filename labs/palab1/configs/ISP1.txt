@@ -1,0 +1,72 @@
+! ISP1 — palab1 (generated 2026-11-08)
+hostname ISP1
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+service routing protocols model multi-agent
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+interface Management0
+   description OOB via CLAB
+   vrf M
+   ip address 172.31.12.11/24
+!
+ip route vrf M 0.0.0.0/0 172.31.12.1
+!
+lldp run
+!
+interface Ethernet1
+   description PA-EDGE:ethernet1/1 OUTSIDE
+   no switchport
+   ip address 198.51.100.1/28
+   no shutdown
+!
+interface Ethernet2
+   description INET-HOST:eth1
+   no switchport
+   ip address 203.0.113.1/24
+   no shutdown
+!
+interface Loopback0
+   description router-id
+   ip address 192.0.2.1/32
+!
+interface Loopback8
+   description simulated public DNS
+   ip address 8.8.8.8/32
+!
+ip prefix-list PL-CUST-PUBLIC seq 10 permit 198.51.100.0/24 le 32
+!
+route-map RM-CUST-IN permit 10
+   match ip address prefix-list PL-CUST-PUBLIC
+!
+router bgp 64500
+   router-id 192.0.2.1
+   neighbor 198.51.100.2 remote-as 65001
+   neighbor 198.51.100.2 description PA-EDGE
+   neighbor 198.51.100.2 default-originate always
+   neighbor 198.51.100.2 route-map RM-CUST-IN in
+   network 8.8.8.8/32
+   network 192.0.2.1/32
+   network 203.0.113.0/24
+!
+
+end

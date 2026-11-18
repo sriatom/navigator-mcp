@@ -1,0 +1,531 @@
+!
+hostname WANFAB1A
+!
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management console
+   idle-timeout 30
+!
+management api gnmi
+   transport grpc default
+      vrf M
+!
+management api netconf
+   transport ssh default
+      vrf M
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+!
+spanning-tree mode mstp
+!
+ip name-server vrf M 8.8.4.4
+ip name-server vrf M 8.8.8.8
+!
+service routing protocols model multi-agent
+!
+!
+interface Management0
+   description Out-of-Band/OOB Interface via CLAB
+   vrf M
+   ip address 172.31.11.61/24
+   exit
+!
+!
+ip route vrf M 0.0.0.0/0 172.31.11.1
+!
+ntp local-interface vrf M Management0
+ntp server vrf M 0.pool.ntp.org prefer
+ntp server vrf M 2.pool.ntp.org
+!
+interface Loopback0
+   description EVPN_OVERLAY_BGP
+   ip address 10.25.10.61/32
+   pim ipv4 sparse-mode
+!
+interface Loopback1
+   description VXLAN Tunnel Source
+   ip address 10.250.10.60/32
+   pim ipv4 sparse-mode
+!
+no vlan 1
+!
+vlan 4094
+   name MLAG
+   trunk group MLAG_VLAN
+   exit
+!
+!
+interface Port-Channel999
+   description MLAG_GROUP/LEAF1 & LEAF2
+   switchport mode trunk
+   switchport trunk allowed vlan 2-4094
+   switchport trunk group MLAG_VLAN
+   no shutdown 
+!
+interface Vlan4094
+   description MLAG PEER GROUP HEARTBEAT
+   mtu 8216
+   ip address 10.255.255.255/31
+   no shutdown
+   exit
+!
+mlag configuration
+   domain-id WANFAB01
+   local-interface Vlan4094
+   peer-address 10.255.255.254
+   primary-priority 10
+   peer-link Port-Channel999
+   exit
+!
+interface Ethernet3
+   description MLAG/LEAF2A-LEAF2B
+   channel-group 999 mode active
+   no shutdown
+   exit
+!
+interface Ethernet4
+   description MLAG/LEAF2A-LEAF2B
+   channel-group 999 mode active
+   no shutdown
+   exit
+!
+
+!
+vlan 3701
+   exit 
+!
+interface Vlan3701
+   description WANFAB_PDFAB
+   mtu 8216
+   ip address 10.30.60.1/27
+   no shutdown
+   exit
+!
+interface Port-Channel1
+   description PDSVCL/LEAF1A & LEAF1B
+   switchport
+   switchport mode access
+   switchport access vlan 3701
+   mtu 8216
+   mlag 1
+   no shutdown
+   exit
+!
+interface Ethernet1
+   description PDSVCL/LEAF1A
+   channel-group 1 mode active
+   no shutdown
+   exit
+!
+interface Ethernet2
+   description PDSVCL/LEAF1B
+   channel-group 1 mode active
+   no shutdown
+   exit
+!
+
+!
+vlan 3801
+   exit 
+!
+interface Vlan3801
+   description WANFAB_QAFAB
+   mtu 8216
+   ip address 10.130.60.1/27
+   no shutdown
+   exit
+!
+interface Port-Channel5
+   description QASVCL/LEAF1A & LEAF1B
+   switchport
+   switchport mode access
+   switchport access vlan 3801
+   mtu 8216
+   mlag 5
+   no shutdown
+   exit
+!
+interface Ethernet5
+   description QASVCL/LEAF1A
+   channel-group 5 mode active
+   no shutdown
+   exit
+!
+interface Ethernet6
+   description QASVCL/LEAF1B
+   channel-group 5 mode active
+   no shutdown
+   exit
+!
+
+!
+router general
+   router-id ipv4 10.25.10.61
+!
+ip virtual-router mac-address 00:1c:73:00:00:99
+!
+
+!
+vrf instance WCS
+!
+ip routing vrf WCS
+!
+vlan 11,61,111,3702,3802,3902,3904
+  exit 
+!
+interface Loopback10
+   description Loopback/VRF: WCS
+   vrf WCS
+   ip address 172.30.10.61/32
+   ip pim sparse-mode 
+   exit
+!
+interface Vlan11
+   vrf WCS
+   ip address 192.168.11.61/24
+   ip virtual-router address 192.168.11.10
+   no shutdown
+   exit
+!
+interface Vlan61
+   vrf WCS
+   ip address 192.168.61.61/24
+   ip virtual-router address 192.168.61.10
+   no shutdown
+   ip pim sparse-mode 
+   exit
+!
+interface Vlan111
+   vrf WCS
+   ip address 192.168.111.61/24
+   ip virtual-router address 192.168.111.10
+   no shutdown
+   exit
+!
+interface Vlan3702
+   description PDFW
+   vrf WCS
+   ip address 10.30.60.41/27
+   no shutdown
+   exit
+!
+interface Vlan3802
+   description QAFW
+   vrf WCS
+   ip address 10.130.60.41/27
+   no shutdown
+   exit
+!
+
+!
+interface Port-Channel9
+   description TENENT:SERVICE3
+   mtu 8216
+   switchport mode trunk
+   switchport trunk allowed vlan 11,61,111
+   mlag 9
+   pim ipv4 sparse-mode
+   no shutdown
+   exit
+!
+interface Ethernet9
+   description SERVICE1:Eth1 to WANFAB1A:Eth9
+   channel-group 9 mode active
+   no shutdown
+   exit
+!
+!
+interface Vlan3902
+   vrf WCS
+   ip address 200.200.200.2/30
+   no shutdown
+   exit
+!
+interface Ethernet10
+   description "SERVICE3:eth3:EQX_ISP1"
+   switchport
+   switchport mode trunk
+   switchport trunk allowed vlan 3902
+   no shutdown
+   exit
+!
+
+! *** Policies ***
+!
+ip prefix-list PFX_DEFAULT seq 10 permit 0.0.0.0/0
+!
+ip extcommunity-list CEX_WCS_DEFAULT permit rt 10301:64900
+ip extcommunity-list CEX_WCS_ROUTED permit rt 10301:64999
+!
+!
+route-map RM_WCS_EXPORT permit 10
+   match ip address prefix-list PFX_DEFAULT
+   set extcommunity extcommunity-list CEX_WCS_DEFAULT
+!
+route-map RM_WCS_EXPORT permit 20
+   set extcommunity extcommunity-list CEX_WCS_ROUTED
+!
+!
+route-map RM_PROD_FW_EXPORT permit 10
+   match ip address prefix-list PFX_DEFAULT
+!
+route-map RM_PROD_FW_EXPORT deny 1000
+!
+!
+route-map RM_QA_FW_EXPORT permit 10
+   match ip address prefix-list PFX_DEFAULT
+!
+route-map RM_QA_FW_EXPORT deny 1000
+!
+
+!
+router bgp 64999
+   no bgp default ipv4-unicast
+   maximum-paths 16 ecmp 16
+   distance bgp 20 200 200
+   bgp bestpath d-path
+
+   neighbor MLAG_UNDERLAY_PEER peer group
+   neighbor MLAG_UNDERLAY_PEER next-hop-self
+   neighbor MLAG_UNDERLAY_PEER update-source Vlan4094
+   neighbor MLAG_UNDERLAY_PEER remote-as 64999
+   neighbor MLAG_UNDERLAY_PEER bfd
+   neighbor MLAG_UNDERLAY_PEER send-community
+   neighbor MLAG_UNDERLAY_PEER maximum-routes 1000
+
+   neighbor 10.255.255.254 peer group MLAG_UNDERLAY_PEER
+   neighbor 10.255.255.254 description WANFAB1B
+
+   neighbor EVPN_OVERLAY_PEERS peer group
+   neighbor EVPN_OVERLAY_PEERS update-source Loopback0
+   neighbor EVPN_OVERLAY_PEERS remote-as 64999
+   neighbor EVPN_OVERLAY_PEERS route-reflector-client
+   neighbor EVPN_OVERLAY_PEERS send-community
+   neighbor EVPN_OVERLAY_PEERS maximum-routes 1000
+
+   neighbor 10.25.10.62 peer group EVPN_OVERLAY_PEERS
+   neighbor 10.25.10.62 description WANFAB1B
+
+   neighbor PDFAB_UL_PEER peer group
+   neighbor PDFAB_UL_PEER remote-as 65300
+   neighbor PDFAB_UL_PEER bfd
+   neighbor PDFAB_UL_PEER send-community
+   neighbor PDFAB_UL_PEER maximum-routes 12000 warning-limit 75 percent warning-only
+
+   neighbor 10.30.60.11 peer group PDFAB_UL_PEER
+   neighbor 10.30.60.11 description PDSVCL1A_UL
+   neighbor 10.30.60.12 peer group PDFAB_UL_PEER
+   neighbor 10.30.60.12 description PDSVCL1B_UL
+
+   neighbor PDFAB_OL_PEER peer group
+   neighbor PDFAB_OL_PEER update-source Loopback0
+   neighbor PDFAB_OL_PEER remote-as 65300
+   !neighbor PDFAB_OL_PEER next-hop-unchanged
+   neighbor PDFAB_OL_PEER ebgp-multihop 2
+   neighbor PDFAB_OL_PEER send-community
+   neighbor PDFAB_OL_PEER maximum-routes 1000
+
+   neighbor 10.25.10.31 peer group PDFAB_OL_PEER
+   neighbor 10.25.10.31 description PDSVCL1A_OL
+   neighbor 10.25.10.32 peer group PDFAB_OL_PEER
+   neighbor 10.25.10.32 description PDSVCL1A_OL
+
+   neighbor QAFAB_UL_PEER peer group
+   neighbor QAFAB_UL_PEER remote-as 64300
+   neighbor QAFAB_UL_PEER bfd
+   neighbor QAFAB_UL_PEER send-community
+   neighbor QAFAB_UL_PEER maximum-routes 12000 warning-limit 75 percent warning-only
+
+   neighbor 10.130.60.11 peer group QAFAB_UL_PEER
+   neighbor 10.130.60.11 description QASVCL1A_UL
+   neighbor 10.130.60.12 peer group QAFAB_UL_PEER
+   neighbor 10.130.60.12 description QASVCL1B_UL
+
+   neighbor QAFAB_OL_PEER peer group
+   neighbor QAFAB_OL_PEER update-source Loopback0
+   neighbor QAFAB_OL_PEER remote-as 64300
+   !neighbor QAFAB_OL_PEER next-hop-unchanged
+   neighbor QAFAB_OL_PEER ebgp-multihop 2
+   neighbor QAFAB_OL_PEER send-community
+   neighbor QAFAB_OL_PEER maximum-routes 1000
+
+   neighbor 10.25.10.131 peer group QAFAB_OL_PEER
+   neighbor 10.25.10.131 description QASVCL1A_OL
+   neighbor 10.25.10.132 peer group QAFAB_OL_PEER
+   neighbor 10.25.10.132 description QASVCL1A_OL
+
+   neighbor WCS_OVERLAY_PEERS peer group
+   neighbor WCS_OVERLAY_PEERS remote-as 64999
+   neighbor WCS_OVERLAY_PEERS update-source Loopback10
+   neighbor WCS_OVERLAY_PEERS route-reflector-client
+   neighbor WCS_OVERLAY_PEERS send-community
+   neighbor WCS_OVERLAY_PEERS maximum-routes 1000
+
+   neighbor PDFW_OL peer group
+   neighbor PDFW_OL remote-as 65501
+   neighbor PDFW_OL bfd
+   neighbor PDFW_OL send-community
+   neighbor PDFW_OL route-map RM_PROD_FW_EXPORT out
+   neighbor PDFW_OL maximum-routes 1000
+
+   neighbor QAFW_OL peer group
+   neighbor QAFW_OL remote-as 64501
+   neighbor QAFW_OL bfd
+   neighbor QAFW_OL send-community
+   neighbor QAFW_OL route-map RM_QA_FW_EXPORT out
+   neighbor QAFW_OL maximum-routes 1000
+
+   neighbor INET_ISP peer group
+   neighbor INET_ISP description "INET_EQUINIX_ISP01"
+   neighbor INET_ISP local-as 100 no-prepend replace-as
+   neighbor INET_ISP bfd
+   neighbor INET_ISP remote-as 12085
+   neighbor INET_ISP send-community
+   neighbor INET_ISP maximum-routes 12000 warning-limit 75 percent warning-only
+   !
+   address-family evpn
+      neighbor EVPN_OVERLAY_PEERS activate
+      neighbor PDFAB_OL_PEER activate
+      neighbor QAFAB_OL_PEER activate
+      neighbor PDFAB_OL_PEER domain remote
+      neighbor QAFAB_OL_PEER domain remote
+      no neighbor PDFAB_UL_PEER activate
+      no neighbor MLAG_UNDERLAY_PEER activate
+      domain identifier 10301:64999
+      neighbor default next-hop-self received-evpn-routes route-type ip-prefix inter-domain
+   !
+   address-family ipv4
+      network 10.25.10.61/32
+      network 10.250.10.60/32
+      network 10.30.60.0/27
+      network 10.130.60.0/27
+      network 10.30.60.64/27
+      network 10.130.60.64/27
+      neighbor MLAG_UNDERLAY_PEER activate
+      neighbor PDFAB_UL_PEER activate
+      neighbor QAFAB_UL_PEER activate
+      neighbor WCS_OVERLAY_PEERS activate
+      neighbor PDFW_OL activate
+      neighbor QAFW_OL activate
+      neighbor INET_ISP activate
+      no neighbor PDFAB_OL_PEER activate
+      no neighbor QAFAB_OL_PEER activate
+      no neighbor EVPN_OVERLAY_PEERS activate
+   !
+   !
+   vlan 11
+      rd 10.25.10.61:20011
+      route-target both 10301:20011
+      rd evpn domain remote 10.25.10.61:20011
+      route-target import evpn domain remote 10301:10011
+      route-target export evpn domain remote 10301:20011
+      redistribute learned
+   !
+   vlan 111
+      rd 10.25.10.61:10111
+      route-target both 10301:10111
+      rd evpn domain remote 10.25.10.61:10111
+      route-target import evpn domain remote 10301:10111
+      route-target export evpn domain remote 10301:10111
+      redistribute learned
+   !
+   vlan 61
+      rd 10.25.10.61:20061
+      route-target both 10301:20061
+      redistribute learned
+   !
+   vlan 3702
+      rd 10.25.10.61:13702
+      rd evpn domain remote 10.25.10.61:13702
+      route-target both 10301:13702
+      route-target import evpn domain remote 10301:13702
+      route-target export evpn domain remote 10301:13702
+      redistribute learned
+   !
+   vlan 3802
+      rd 10.25.10.61:13802
+      rd evpn domain remote 10.25.10.61:13802
+      route-target both 10301:13802
+      route-target import evpn domain remote 10301:13802
+      route-target export evpn domain remote 10301:13802
+      redistribute learned
+   !
+   vrf WCS
+      rd 10.25.10.61:30100
+      route-target import evpn 10301:64999
+      route-target export evpn 10301:64999
+      route-target import evpn 10301:30100
+      route-target import evpn 10301:30300
+
+      route-target export evpn route-map RM_WCS_EXPORT
+      network 172.30.10.61/32
+      network 192.168.11.0/24
+      network 192.168.61.0/24
+      network 192.168.111.0/24
+      network 10.30.60.0/27
+      network 10.130.60.0/27
+      network 10.30.60.64/27
+      network 10.130.60.64/27
+      redistribute connected
+      evpn multicast
+
+      neighbor 172.30.10.62 peer group WCS_OVERLAY_PEERS
+      neighbor 172.30.10.62 description WCS_WANFAB1B
+
+      neighbor 10.30.60.51 peer group PDFW_OL
+      neighbor 10.30.60.51 description PDFW1_OL
+
+      neighbor 10.130.60.51 peer group QAFW_OL
+      neighbor 10.130.60.51 description QAFW_OL
+
+      neighbor 200.200.200.1 peer group INET_ISP
+      neighbor 200.200.200.1 description EQX_ISP1
+    exit
+   !
+!
+!
+router multicast
+   ipv4
+      routing
+      software-forwarding kernel
+      multipath deterministic router-id
+   !
+!
+!
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan virtual-router encapsulation mac-address mlag-system-id
+   vxlan mlag source-interface loopback1
+   vxlan udp-port 4789
+   vxlan vlan 11 vni 10011
+   vxlan vlan 61 vni 20061
+   vxlan vlan 111 vni 10111
+   vxlan vlan 3702 vni 13702
+   vxlan vlan 3802 vni 13802
+   vxlan vrf WCS vni 64999
+   exit
+!
+
+!
+end
+!

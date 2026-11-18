@@ -1,0 +1,44 @@
+[project]
+name = "navigator"
+version = "0.3.0"
+license = {text = "Apache-2.0"}
+description = "ATLAS (inventory + credentials), layer 1 of ATLAS / RUDDER / NAVIGATOR, as an MCP server"
+requires-python = ">=3.11"
+dependencies = ["fastmcp>=2.13,<3", "PyYAML>=6", "cryptography>=42", "netmiko>=4.4"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "pytest-asyncio>=0.23"]
+catalog = ["netmiko>=4.4"]        # only to regenerate PLATFORMS.yml
+batfish = ["pybatfish>=2025.1"]   # change validation with a Batfish service (VALIDATION.MODE batfish | netclaw)
+
+[project.scripts]
+atlas-mcp = "atlas_inventory.server:main"
+atlas-vault = "atlas_inventory.vault:main"
+atlas-interview = "atlas_inventory.interview:main"
+atlas-link = "atlas_inventory.link:main"
+rudder-mcp = "rudder_devices.server:main"
+rudder-scheduler = "rudder_devices.schedule:main"
+rudder-approve = "rudder_devices.approve_cli:main"
+navigator-mcp = "navigator_engineer.server:main"
+navigator-skills = "navigator_engineer.roles:main"
+navigator-setup = "navigator_engineer.setup:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["atlas_inventory", "rudder_devices", "navigator_engineer", "navigator_gate", "navigator_engineer.scrambler",
+            "navigator_packs", "navigator_packs.arista", "navigator_packs.cisco",
+            "navigator_packs.paloalto", "navigator_packs.fortinet", "navigator_packs.multivendor",
+            "navigator_packs.juniper", "navigator_packs.aruba", "navigator_packs.f5",
+            "navigator_packs.checkpoint", "navigator_packs.generic"]
+
+[tool.setuptools.package-data]
+atlas_inventory = ["catalog/*.yml", "templates/*.yml"]
+navigator_engineer = ["roles/*.md", "skills/*.md", "templates/*.md", "logo.svg"]
+navigator_packs = ["*/pack.yml", "*/commands.yml", "*/knowledge.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

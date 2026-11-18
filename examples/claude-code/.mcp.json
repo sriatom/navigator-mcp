@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "navigator": {
+      "type": "stdio",
+      "command": "ssh",
+      "args": ["-T", "-o", "BatchMode=yes", "navhost",
+               "NAVIGATOR_BOOTSTRAP=/home/<user>/.config/navigator/navigator.yml exec /home/<user>/navigator/.venv/bin/navigator-mcp 2>/dev/null"]
+    }
+  }
+}

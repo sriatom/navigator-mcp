@@ -1,0 +1,111 @@
+# Arista EOS: allowed read commands by category (moved from atlas_inventory/catalog/COMMANDS.yml).
+EOS:
+  system:
+  - show version
+  - show inventory
+  - show hostname
+  - show uptime
+  - show system environment all
+  - show system environment temperature
+  - show system environment power
+  - show system environment cooling
+  - show processes top once
+  - show clock
+  - show ntp status
+  - show ntp associations
+  - show running-config
+  - show startup-config
+  - show boot-config
+  - show reload cause
+  - show logging last 100
+  - show users
+  - show extensions
+  interfaces:
+  - show interfaces
+  - show interfaces status
+  - show interfaces description
+  - show interfaces counters
+  - show interfaces counters errors
+  - show interfaces counters discards
+  - show interfaces transceiver
+  - show interfaces switchport
+  - show interfaces trunk
+  - show port-channel summary
+  - show lacp neighbor
+  - show lldp neighbors
+  - show lldp neighbors detail
+  vlans:
+  - show vlan
+  - show vlan brief
+  - show mac address-table
+  - show mac address-table count
+  - show spanning-tree
+  - show spanning-tree root
+  - show spanning-tree blockedports
+  routing:
+  - show ip interface brief
+  - show ipv6 interface brief
+  - show vrf
+  - show ip route
+  - show ip route summary
+  - show ip route vrf all
+  - show ipv6 route
+  - show ip arp
+  - show ip arp vrf all
+  - show ipv6 neighbors
+  bgp:
+  - show ip bgp summary
+  - show ip bgp summary vrf all
+  - show ipv6 bgp summary
+  - show bgp evpn summary
+  - show ip bgp neighbors
+  - show ip bgp
+  - show ip bgp neighbors <peer> advertised-routes
+  - show ip bgp neighbors <peer> received-routes
+  ospf:
+  - show ip ospf
+  - show ip ospf neighbor
+  - show ip ospf neighbor vrf all
+  - show ip ospf interface brief
+  - show ip ospf database
+  evpn_vxlan:
+  - show interfaces vxlan 1
+  - show vxlan vtep
+  - show vxlan vni
+  - show vxlan address-table
+  - show vxlan config-sanity
+  - show bgp evpn route-type mac-ip
+  - show bgp evpn route-type imet
+  - show bgp evpn route-type ip-prefix ipv4
+  mlag:
+  - show mlag
+  - show mlag detail
+  - show mlag config-sanity
+  - show mlag interfaces
+  acl:
+  - show ip access-lists
+  - show ip access-lists summary
+  - show ipv6 access-lists
+  - show ip access-lists <acl-name>
+  qos:
+  - show qos interfaces
+  - show qos maps
+  - show policy-map interface <interface>
+  multicast:
+  - show ip mroute
+  - show ip pim neighbor
+  - show ip igmp snooping groups
+  mpls:
+  - show mpls lfib route
+  - show mpls ldp neighbor
+  hardware:
+  - show hardware capacity
+  - show hardware tcam profile
+  - show platform fap
+  security:
+  - show aaa
+  - show aaa sessions
+  - show management api http-commands
+  - show management ssh
+  - show tacacs
+  - show radius

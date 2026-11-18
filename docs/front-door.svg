@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="890" viewBox="0 0 1200 890" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a4f57"/>
+    </marker>
+    <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#B26B00"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F5FAD"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="890" fill="#ffffff"/>
+
+  <text x="40" y="44" font-size="26" font-weight="700" fill="#1d2129">How NAVIGATOR fits in</text>
+  <text x="40" y="70" font-size="15.5" fill="#5b6270">You talk to your own agent. The agent reaches your network only through NAVIGATOR, and a person approves every change.</text>
+
+  <!-- 1. where you talk -->
+  <text x="40" y="106" font-size="14" font-weight="700" fill="#5b6270">1 · WHERE YOU TALK</text>
+  <g font-size="15" font-weight="600" fill="#1d2129" text-anchor="middle">
+    <rect x="40" y="116" width="150" height="40" rx="20" fill="#f3f4f6" stroke="#9aa1ad"/><text x="115" y="141">Slack</text>
+    <rect x="206" y="116" width="150" height="40" rx="20" fill="#f3f4f6" stroke="#9aa1ad"/><text x="281" y="141">Telegram</text>
+    <rect x="372" y="116" width="150" height="40" rx="20" fill="#f3f4f6" stroke="#9aa1ad"/><text x="447" y="141">Teams</text>
+    <rect x="538" y="116" width="150" height="40" rx="20" fill="#f3f4f6" stroke="#9aa1ad"/><text x="613" y="141">Discord</text>
+    <rect x="704" y="116" width="150" height="40" rx="20" fill="#f3f4f6" stroke="#9aa1ad"/><text x="779" y="141">Terminal / IDE</text>
+  </g>
+  <line x1="447" y1="158" x2="447" y2="190" stroke="#4a4f57" stroke-width="2" marker-end="url(#a)"/>
+  <text x="459" y="180" font-size="13.5" fill="#4a4f57">your messages</text>
+
+  <!-- 2. the agent host -->
+  <rect x="40" y="194" width="814" height="118" rx="14" fill="#f7f7f9" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="60" y="222" font-size="14" font-weight="700" fill="#5b6270">2 · YOUR AGENT HOST (ANY ONE OF THESE)</text>
+  <g font-size="15" font-weight="700" fill="#1d2129" text-anchor="middle">
+    <rect x="60" y="234" width="120" height="38" rx="9" fill="#fff" stroke="#6b7280"/><text x="120" y="258">Hermes</text>
+    <rect x="190" y="234" width="120" height="38" rx="9" fill="#fff" stroke="#6b7280"/><text x="250" y="258">NetClaw</text>
+    <rect x="320" y="234" width="120" height="38" rx="9" fill="#fff" stroke="#6b7280"/><text x="380" y="258">OpenClaw</text>
+    <rect x="450" y="234" width="120" height="38" rx="9" fill="#fff" stroke="#6b7280"/><text x="510" y="258">Claude Code</text>
+    <rect x="580" y="234" width="120" height="38" rx="9" fill="#fff" stroke="#6b7280"/><text x="640" y="258">Cursor</text>
+    <rect x="710" y="234" width="124" height="38" rx="9" fill="#fff" stroke="#6b7280" stroke-dasharray="5 3"/><text x="772" y="258" font-size="13.5">any MCP client</text>
+  </g>
+  <text x="60" y="296" font-size="14" fill="#2b2f36">It runs the AI model (cloud or local), keeps the chat connections and starts NAVIGATOR as an MCP server.</text>
+
+  <line x1="447" y1="314" x2="447" y2="350" stroke="#4a4f57" stroke-width="2" marker-end="url(#a)"/>
+  <text x="459" y="338" font-size="13.5" fill="#4a4f57">MCP · one server, 16 tools · stdio, SSH or HTTPS :8791</text>
+
+  <!-- 3. NAVIGATOR -->
+  <rect x="40" y="354" width="814" height="386" rx="14" fill="#EFEAFB" stroke="#6C4AB6" stroke-width="2"/>
+  <text x="60" y="382" font-size="14" font-weight="700" fill="#6C4AB6">3 · NAVIGATOR (LAYER 3): THE FRONT DOOR AND THE ENGINEER</text>
+  <text x="60" y="410" font-size="15" fill="#2b2f36"><tspan font-weight="700" fill="#3b2672">Every call is checked:</tspan> which project · CLOUD or LOCAL · the project's inventory ·</text>
+  <text x="60" y="432" font-size="15" fill="#2b2f36">allowed commands · a change only as a ticket. Nine roles with a QC gate, vendor packs, research.</text>
+
+  <!-- ATLAS -->
+  <rect x="60" y="452" width="370" height="268" rx="10" fill="#E6EEF9" stroke="#1F5FAD" stroke-width="2"/>
+  <text x="80" y="480" font-size="13" font-weight="700" fill="#1F5FAD">LAYER 1</text>
+  <text x="80" y="506" font-size="20" font-weight="700" fill="#123b6d">ATLAS: inventory</text>
+  <g font-size="14.5" fill="#2b2f36">
+    <text x="80" y="538">Devices, controllers, out-of-band gear</text>
+    <text x="80" y="562">174 platforms, allowed read commands</text>
+    <text x="80" y="586">Credentials encrypted, used by tag only</text>
+    <text x="80" y="610">Guided interview, every version kept</text>
+  </g>
+  <text x="80" y="700" font-size="13.5" fill="#1F5FAD" font-style="italic">No password ever reaches a model.</text>
+
+  <!-- RUDDER -->
+  <rect x="464" y="452" width="370" height="268" rx="10" fill="#E3F4F4" stroke="#0F7C7C" stroke-width="2"/>
+  <text x="484" y="480" font-size="13" font-weight="700" fill="#0F7C7C">LAYER 2</text>
+  <text x="484" y="506" font-size="20" font-weight="700" fill="#0a4f4f">RUDDER: every device</text>
+  <g font-size="14.5" fill="#2b2f36">
+    <text x="484" y="538">Reads through any method (eAPI, SSH,</text>
+    <text x="484" y="560">pyATS, APIs), side by side, debug</text>
+    <text x="484" y="588">Changes: dry-run diff, approval,</text>
+    <text x="484" y="610">commit, verify, roll back</text>
+    <text x="484" y="638">Scheduled changes, change pages</text>
+  </g>
+  <text x="484" y="700" font-size="13.5" fill="#0F7C7C" font-style="italic">No AI model inside. No approve tool.</text>
+
+  <line x1="432" y1="660" x2="460" y2="660" stroke="#1F5FAD" stroke-width="2.5" marker-end="url(#ab)"/>
+
+  <!-- network -->
+  <line x1="649" y1="722" x2="649" y2="774" stroke="#4a4f57" stroke-width="2" marker-end="url(#a)"/>
+  <text x="661" y="754" font-size="13.5" fill="#4a4f57">reads and approved changes only</text>
+  <rect x="464" y="778" width="370" height="74" rx="14" fill="#f3f4f6" stroke="#9aa1ad"/>
+  <text x="649" y="808" font-size="18" font-weight="700" fill="#1d2129" text-anchor="middle">Your network</text>
+  <text x="649" y="832" font-size="14" fill="#2b2f36" text-anchor="middle">switches · routers · firewalls · controllers</text>
+
+  <text x="60" y="790" font-size="13.5" fill="#1F5FAD">ATLAS hands credentials to RUDDER only,</text>
+  <text x="60" y="810" font-size="13.5" fill="#1F5FAD">never to NAVIGATOR's replies or a model.</text>
+
+  <!-- right column: approvals -->
+  <rect x="890" y="116" width="270" height="250" rx="14" fill="#FFF3DF" stroke="#B26B00" stroke-width="2"/>
+  <text x="1025" y="148" font-size="13" font-weight="700" fill="#B26B00" text-anchor="middle">APPROVAL CHANNEL</text>
+  <text x="1025" y="176" font-size="19" font-weight="700" fill="#7a4900" text-anchor="middle">A person approves</text>
+  <g font-size="14.5" fill="#2b2f36" text-anchor="middle">
+    <text x="1025" y="206">A separate approval bot posts</text>
+    <text x="1025" y="227">the devices, the diff and a</text>
+    <text x="1025" y="248">one-time code. You answer:</text>
+  </g>
+  <text x="1025" y="280" font-size="18" font-weight="700" fill="#7a4900" text-anchor="middle" font-family="Consolas, monospace">/pushok CODE</text>
+  <text x="1025" y="310" font-size="13.5" fill="#2b2f36" text-anchor="middle">Slack, Telegram, Teams …</text>
+  <text x="1025" y="346" font-size="13" fill="#5b6270" text-anchor="middle">Not the chat bot. No model approves.</text>
+  <path d="M888 296 H870 V600 H838" fill="none" stroke="#B26B00" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+
+  <!-- right column: local model, web -->
+  <rect x="890" y="452" width="270" height="110" rx="14" fill="#f3f4f6" stroke="#9aa1ad" stroke-dasharray="6 4"/>
+  <text x="1025" y="482" font-size="17" font-weight="700" fill="#1d2129" text-anchor="middle">Local model (optional)</text>
+  <text x="1025" y="508" font-size="14" fill="#2b2f36" text-anchor="middle">Ollama or any OpenAI-compatible</text>
+  <text x="1025" y="528" font-size="14" fill="#2b2f36" text-anchor="middle">server on your network reads</text>
+  <text x="1025" y="548" font-size="14" fill="#2b2f36" text-anchor="middle">LOCAL project data</text>
+
+  <rect x="890" y="590" width="270" height="96" rx="14" fill="#f3f4f6" stroke="#9aa1ad" stroke-dasharray="6 4"/>
+  <text x="1025" y="620" font-size="17" font-weight="700" fill="#1d2129" text-anchor="middle">Web research</text>
+  <text x="1025" y="646" font-size="14" fill="#2b2f36" text-anchor="middle">self-hosted SearXNG</text>
+  <text x="1025" y="666" font-size="14" fill="#2b2f36" text-anchor="middle">generic queries only for LOCAL</text>
+  <text x="1025" y="440" font-size="13" font-weight="700" fill="#5b6270" text-anchor="middle">USED BY NAVIGATOR</text>
+
+  <text x="1160" y="878" font-size="12" fill="#8b8b95" text-anchor="end">dashed = optional</text>
+</svg>

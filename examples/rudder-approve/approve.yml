@@ -1,0 +1,9 @@
+# rudder-approve config (required). Copy to ~/.config/rudder/approve.yml and chmod 600.
+# Your host's own /pushok handler calls:  rudder-approve ok CODE --user <id> --platform <p> --channel <c>
+APPROVAL_DIR: ~/.hermes/push-approvals    # the same folder as RUDDER's APPROVAL.APPROVAL_DIR
+PLATFORMS: [slack, teams]                 # where approvals may come from
+CHANNELS:                                 # optional: only these channels per platform
+  slack: [C0123APPROVALS]
+  # teams: [approvals.team]
+APPROVERS: "*"                            # "*" or a list of user IDs (on top of each request's own list)
+LOG: ~/.rudder/approve.log                # every call; codes are never written

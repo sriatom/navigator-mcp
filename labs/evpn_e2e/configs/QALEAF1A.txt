@@ -1,0 +1,317 @@
+!
+hostname QALEAF1A
+!
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management console
+   idle-timeout 30
+!
+management api gnmi
+   transport grpc default
+      vrf M
+!
+management api netconf
+   transport ssh default
+      vrf M
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+!
+spanning-tree mode mstp
+!
+ip name-server vrf M 8.8.4.4
+ip name-server vrf M 8.8.8.8
+!
+service routing protocols model multi-agent
+!
+!
+interface Management0
+   description Out-of-Band/OOB Interface via CLAB
+   vrf M
+   ip address 172.31.11.111/24
+   exit
+!
+!
+ip route vrf M 0.0.0.0/0 172.31.11.1
+!
+ntp local-interface vrf M Management0
+ntp server vrf M 0.pool.ntp.org prefer
+ntp server vrf M 2.pool.ntp.org
+!
+interface Loopback0
+   description EVPN_OVERLAY_BGP
+   ip address 10.25.10.111/32
+   pim ipv4 sparse-mode
+!
+interface Loopback1
+   description VXLAN Tunnel Source
+   ip address 10.250.10.110/32
+   pim ipv4 sparse-mode
+!
+!
+interface Ethernet1
+   description SPINE1-LEAF1A
+   mtu 8216
+   no switchport
+   ip address 10.110.111.100/24
+   pim ipv4 sparse-mode
+   exit
+!
+interface Ethernet2
+   description SPINE2-LEAF1A
+   mtu 8216
+   no switchport
+   ip address 10.120.111.100/24
+   pim ipv4 sparse-mode
+   exit
+!
+no vlan 1
+!
+vlan 4094
+   name MLAG
+   trunk group MLAG_VLAN
+   exit
+!
+!
+interface Port-Channel999
+   description MLAG_GROUP/LEAF1 & LEAF2
+   switchport mode trunk
+   switchport trunk group MLAG_VLAN
+   no shutdown 
+!
+interface Vlan4094
+   description MLAG PEER GROUP HEARTBEAT
+   mtu 8216
+   ip address 10.255.255.255/31
+   no shutdown
+   exit
+!
+mlag configuration
+   domain-id QALEAF01
+   local-interface Vlan4094
+   peer-address 10.255.255.254
+   primary-priority 10
+   peer-link Port-Channel999
+   exit
+!
+interface Ethernet3
+   description MLAG/LEAF1A-LEAF1B
+   channel-group 999 mode active
+   no shutdown
+   exit
+!
+interface Ethernet4
+   description MLAG/LEAF1A-LEAF1B
+   channel-group 999 mode active
+   no shutdown
+   exit
+!
+!
+router general
+   router-id ipv4 10.25.10.111
+!
+
+!
+vlan 111-113,122
+   exit
+!
+interface Port-Channel11
+   description TENENT:SERVICE1
+   mtu 8216
+   switchport mode trunk 
+   switchport trunk allowed vlan 111-113,122
+   mlag 11
+   pim ipv4 sparse-mode
+   no shutdown
+   exit
+!
+interface Ethernet5
+   description SERVICE1:Eth1 to LEAF1A:Eth5
+   channel-group 11 mode active
+   no shutdown
+   exit
+!
+
+!
+vrf instance QACS
+!
+ip routing vrf QACS
+!
+interface Loopback10
+   description Loopback/VRF: QACS
+   vrf QACS
+   ip address 172.30.10.111/32
+   ip pim sparse-mode 
+   exit
+!
+interface Vlan111
+   vrf QACS
+   ip address virtual 192.168.111.10/24
+   no shutdown
+   ip pim sparse-mode
+   exit
+!
+interface Vlan112
+   vrf QACS
+   ip address virtual 192.168.112.10/24
+   no shutdown
+   ip pim sparse-mode 
+   exit
+!
+interface Vlan122
+   vrf QACS
+   ip address virtual 192.168.122.10/24
+   no shutdown
+   ip pim sparse-mode 
+   exit
+!
+router ospf 100 vrf QACS
+   router-id 172.30.10.111
+   network 172.30.10.111/32 area 0.0.0.0
+   network 192.168.111.111/32 area 0.0.0.0
+   network 192.168.112.111/32 area 0.0.0.0
+   network 192.168.122.111/24 area 0.0.0.0
+   !default-information originate always
+   exit
+!
+no router ospf 100 vrf QACS
+!
+
+!
+router bgp 64100
+   no bgp default ipv4-unicast
+   maximum-paths 16 ecmp 16
+   distance bgp 20 200 200
+
+   neighbor UNDERLAY_PEERS peer group
+   neighbor UNDERLAY_PEERS remote-as 64000
+   neighbor UNDERLAY_PEERS bfd
+   neighbor UNDERLAY_PEERS send-community
+   neighbor UNDERLAY_PEERS maximum-routes 12000 warning-limit 75 percent warning-only
+
+   neighbor EVPN_OVERLAY_SPINES peer group
+   neighbor EVPN_OVERLAY_SPINES update-source Loopback0
+   neighbor EVPN_OVERLAY_SPINES remote-as 64000
+   neighbor EVPN_OVERLAY_SPINES ebgp-multihop 5
+   neighbor EVPN_OVERLAY_SPINES send-community
+   neighbor EVPN_OVERLAY_SPINES maximum-routes 1000
+
+   neighbor 10.110.111.10 peer group UNDERLAY_PEERS
+   neighbor 10.110.111.10 description QASPINE1
+
+   neighbor 10.25.10.110 peer group EVPN_OVERLAY_SPINES
+   neighbor 10.25.10.110 description QASPINE1
+
+   neighbor 10.120.111.10 peer group UNDERLAY_PEERS
+   neighbor 10.120.111.10 description QASPINE2
+
+   neighbor 10.25.10.120 peer group EVPN_OVERLAY_SPINES
+   neighbor 10.25.10.120 description QASPINE2
+
+   neighbor MLAG_UNDERLAY_PEER peer group
+   neighbor MLAG_UNDERLAY_PEER next-hop-self
+   neighbor MLAG_UNDERLAY_PEER update-source Vlan4094
+   neighbor MLAG_UNDERLAY_PEER remote-as 64100
+   neighbor MLAG_UNDERLAY_PEER bfd
+   neighbor MLAG_UNDERLAY_PEER send-community
+   neighbor MLAG_UNDERLAY_PEER maximum-routes 1000
+
+   neighbor 10.255.255.254 peer group MLAG_UNDERLAY_PEER
+   neighbor 10.255.255.254 description QALEAF1B
+   !
+   address-family evpn
+      neighbor EVPN_OVERLAY_SPINES activate
+   !
+   address-family ipv4
+      network 10.25.10.111/32
+      network 10.110.111.0/24
+      network 10.120.111.0/24
+      network 10.250.10.110/32
+      neighbor UNDERLAY_PEERS activate
+      neighbor MLAG_UNDERLAY_PEER activate
+      no neighbor EVPN_OVERLAY_SPINES activate
+   !
+   vlan 111
+      rd 10.25.10.111:10111
+      route-target both 10301:10111
+      redistribute learned
+   !
+   vlan 112
+      rd 10.25.10.111:10112
+      route-target both 10301:10112
+      redistribute learned
+   !
+   vlan 113
+      rd 10.25.10.111:10113
+      route-target both 10301:10113
+      redistribute learned
+   !
+   vlan 122
+      rd 10.25.10.111:10122
+      route-target both 10301:10122
+      redistribute learned
+   !
+   !
+   vrf QACS
+      rd 10.25.10.111:30300
+      route-target import evpn 10301:30300
+      route-target export evpn 10301:30300
+      route-target import evpn 10301:64999
+      route-target import evpn 10301:30100
+      !route-target import evpn route-map RM_QACS_IMPORT
+      !route-target export evpn route-map RM_QACS_EXPORT
+
+      network 172.30.10.111/32
+      network 192.168.111.0/24
+      network 192.168.112.0/24
+      network 192.168.122.0/24
+      evpn multicast
+    exit
+   !
+!
+router multicast
+   ipv4
+      routing
+      software-forwarding kernel
+      multipath deterministic router-id
+   !
+   vrf QACS
+      ipv4
+         routing
+!
+!
+interface Vxlan1
+   vxlan source-interface Loopback0
+   vxlan virtual-router encapsulation mac-address mlag-system-id
+   vxlan mlag source-interface loopback1
+   vxlan udp-port 4789
+   vxlan vlan 111 vni 10111
+   vxlan vlan 112 vni 10112
+   vxlan vlan 113 vni 10113
+   vxlan vlan 122 vni 10122
+   vxlan vrf QACS vni 30300
+   exit
+!
+
+!
+end
+!

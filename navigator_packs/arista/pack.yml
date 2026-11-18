@@ -1,0 +1,48 @@
+# Arista vendor pack. Everything NAVIGATOR needs for Arista EOS, across the three layers.
+pack: arista
+vendor: ARISTA
+description: Arista EOS switches and routers (also cEOS / vEOS in labs)
+
+# ATLAS: the catalogue entry (moved from platforms_overlay.yml)
+platforms:
+  EOS:
+    vendor: ARISTA
+    aliases: [ARISTA_EOS, ARISTAEOS]
+    netmiko: arista_eos
+    napalm: eos
+    pyats: eos
+    ansible: arista.eos.eos
+    multivendor: arista_eos
+    anta: true
+    conn: [EAPI, SSH]
+    reads: native:eapi            # SSH fallback uses "show ... | json" (native:ssh-json)
+    writes: native:eapi
+    validators: [anta, batfish, suzieq]
+
+# RUDDER: the built-in connection methods this pack brings (adapters.py)
+methods:
+  eapi:
+    adapter: EosEapi              # reads: JSON over HTTPS (/command-api), text when a command has no JSON
+    writer: EosEapiWriter         # changes: configure session -> commit timer -> verify -> confirm / abort
+    conn: EAPI
+    port: 443
+  ssh-json:
+    adapter: EosSshJson           # reads over SSH, "| json" so the output matches eAPI; text fallback
+    conn: SSH
+    port: 22
+  # writes over SSH are not built: a change needs a CONN_TYPE EAPI record
+
+# ATLAS: the fields the inventory interview asks for an Arista record (besides name, address, credential)
+fields:
+  CONN_TYPE: {ask: "eAPI (HTTPS, JSON, needed for changes) or SSH?", values: [EAPI, SSH], default: EAPI}
+  PORT: {ask: "port", default_by_conn: {EAPI: 443, SSH: 22}}
+  SSH_PORT: {ask: "SSH port when an SSH read is asked for on an eAPI record", default: 22, optional: true}
+  EAPI_PORT: {ask: "eAPI port when an eAPI read is asked for on an SSH record", default: 443, optional: true}
+
+# ATLAS: which records in atlas_inventory/templates/INVENTORY_TEMPLATE.yml show each method
+template_examples:
+  eapi: PDSPINE1
+  ssh-json: PDSVCL1B
+
+# NAVIGATOR: checks the roles can use (validators) and the pack's notes (knowledge.md)
+validators: [anta, batfish, suzieq]

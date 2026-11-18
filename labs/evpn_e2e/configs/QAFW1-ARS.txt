@@ -1,0 +1,146 @@
+!
+hostname QAFW1
+!
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management console
+   idle-timeout 30
+!
+management api gnmi
+   transport grpc default
+      vrf M
+!
+management api netconf
+   transport ssh default
+      vrf M
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+!
+spanning-tree mode mstp
+!
+ip name-server vrf M 8.8.4.4
+ip name-server vrf M 8.8.8.8
+!
+service routing protocols model multi-agent
+!
+!
+interface Management0
+   description Out-of-Band/OOB Interface via CLAB
+   vrf M
+   ip address 172.31.11.141/24
+   exit
+!
+!
+ip route vrf M 0.0.0.0/0 172.31.11.1
+!
+ntp local-interface vrf M Management0
+ntp server vrf M 0.pool.ntp.org prefer
+ntp server vrf M 2.pool.ntp.org
+!
+
+!
+interface Loopback1
+   description QA:LOOPBACK
+   ip address 10.25.10.141/32
+   pim ipv4 sparse-mode
+!
+
+!
+interface Port-Channel1
+   description WANFAB1A/WANFAB1B
+   no switchport
+   mtu 8216
+   mlag 1
+   no shutdown
+   exit
+!
+interface Port-Channel1.3802
+   description QAFW_WANFAB
+   encapsulation dot1q vlan 3802
+   ip address 10.130.60.51/27
+   no shutdown
+   exit
+!
+interface Port-Channel1.3803
+   description QAFW_QAFAB
+   encapsulation dot1q vlan 3803
+   ip address 10.130.60.81/27
+   no shutdown
+   exit
+!
+interface Ethernet1
+   description WANFAB1A:Eth8
+   channel-group 1 mode active
+   no shutdown
+   exit
+!
+interface Ethernet2
+   description WANFAB1B:Eth8
+   channel-group 1 mode active
+   no shutdown
+   exit
+!
+
+
+!
+router general
+   router-id ipv4 10.25.10.141
+!
+
+!
+router bgp 64501
+   no bgp default ipv4-unicast
+   maximum-paths 16 ecmp 16
+   distance bgp 20 200 200
+
+   neighbor QAFW_WANFAB peer group
+   neighbor QAFW_WANFAB remote-as 64999
+   neighbor QAFW_WANFAB bfd
+   neighbor QAFW_WANFAB send-community
+   neighbor QAFW_WANFAB maximum-routes 1000
+
+   neighbor 10.130.60.41 peer group QAFW_WANFAB
+   neighbor 10.130.60.41 description WANFAB1A
+   neighbor 10.130.60.42 peer group QAFW_WANFAB
+   neighbor 10.130.60.42 description WANFAB1B
+
+   neighbor QAFW_QAFAB peer group
+   neighbor QAFW_QAFAB remote-as 64300
+   neighbor QAFW_QAFAB bfd
+   neighbor QAFW_QAFAB send-community
+   neighbor QAFW_QAFAB maximum-routes 1000
+
+   neighbor 10.130.60.71 peer group QAFW_QAFAB
+   neighbor 10.130.60.71 description QASVCL1A
+   neighbor 10.130.60.72 peer group QAFW_QAFAB
+   neighbor 10.130.60.72 description QASVCL1B
+  !
+   address-family ipv4
+      redistribute connected
+      neighbor QAFW_QAFAB activate
+      neighbor QAFW_WANFAB activate
+   exit
+
+!
+end
+!

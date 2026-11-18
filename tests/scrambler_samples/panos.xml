@@ -1,0 +1,54 @@
+<config version="11.1.0">
+  <mgt-config>
+    <users>
+      <entry name="admin">
+        <phash>$5$qrstuvwx$ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcd</phash>
+      </entry>
+    </users>
+  </mgt-config>
+  <devices>
+    <entry name="localhost.localdomain">
+      <deviceconfig>
+        <system>
+          <hostname>nyc-pa-fw01</hostname>
+          <domain>corp.globex.com</domain>
+          <serial>012801099999</serial>
+        </system>
+      </deviceconfig>
+      <network>
+        <ike>
+          <gateway>
+            <entry name="GW-ACME">
+              <authentication>
+                <pre-shared-key>
+                  <key>-AQ==c2VjcmV0cHNrZm9yYWNtZQ==</key>
+                </pre-shared-key>
+              </authentication>
+              <peer-address><ip>93.184.216.10</ip></peer-address>
+            </entry>
+          </gateway>
+        </ike>
+      </network>
+      <vsys>
+        <entry name="vsys1">
+          <address>
+            <entry name="GLOBEX-SFTP-01">
+              <ip-netmask>10.10.20.22/32</ip-netmask>
+              <description>SFTP server owned by Jane Smith</description>
+            </entry>
+          </address>
+        </entry>
+      </vsys>
+    </entry>
+  </devices>
+  <shared>
+    <certificate>
+      <entry name="GLOBEX-INBOUND">
+        <private-key>-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gun
+VTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxK
+-----END RSA PRIVATE KEY-----</private-key>
+      </entry>
+    </certificate>
+  </shared>
+</config>

@@ -1,0 +1,77 @@
+! CORE1 — palab1 (generated 2026-11-08)
+hostname CORE1
+dns domain example.com
+!
+username admin privilege 15 role network-admin secret admin
+!
+no aaa root
+!
+vrf instance M
+!
+ip routing
+no ip routing vrf M
+!
+service routing protocols model multi-agent
+!
+management api http-commands
+   no shutdown
+   !
+   vrf M
+      no shutdown
+!
+management ssh
+   authentication mode password
+   !
+   vrf M
+!
+interface Management0
+   description OOB via CLAB
+   vrf M
+   ip address 172.31.12.12/24
+!
+ip route vrf M 0.0.0.0/0 172.31.12.1
+!
+lldp run
+!
+interface Ethernet1
+   description PA-EDGE:ethernet1/3 INSIDE
+   no switchport
+   ip address 10.255.1.1/30
+   no shutdown
+!
+interface Ethernet2
+   description USER-HQ:eth1 HQ users
+   no switchport
+   ip address 10.10.10.1/24
+   no shutdown
+!
+interface Ethernet3
+   description PA-DC:ethernet1/1 CORE
+   no switchport
+   ip address 10.255.2.1/30
+   no shutdown
+!
+interface Ethernet4
+   description WAN1:Ethernet1
+   no switchport
+   ip address 10.255.3.1/30
+   no shutdown
+!
+interface Loopback0
+   description router-id
+   ip address 10.0.0.12/32
+!
+router bgp 65010
+   router-id 10.0.0.12
+   maximum-paths 4
+   neighbor 10.255.1.2 remote-as 65001
+   neighbor 10.255.1.2 description PA-EDGE
+   neighbor 10.255.2.2 remote-as 65002
+   neighbor 10.255.2.2 description PA-DC
+   neighbor 10.255.3.2 remote-as 65020
+   neighbor 10.255.3.2 description WAN1
+   network 10.0.0.12/32
+   network 10.10.10.0/24
+!
+
+end

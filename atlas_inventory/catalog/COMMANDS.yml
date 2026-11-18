@@ -1,0 +1,21 @@
+# Read command allowlist per platform. Copied 2026-11-11 from NAVI's COMMAND_LIST_EXTENDED.yml
+# (decision #35: versioned, non-secret). Top keys resolve through the platform catalogue.
+---
+# COMMAND_LIST_EXTENDED.yml — NAVI command reference (single source for nv-datacollect and nv-recipe)
+# Sections = platform; categories are named the same across platforms where they exist:
+#   system interfaces vlans routing bgp ospf evpn_vxlan mlag acl qos multicast mpls hardware security
+#   + platform-specific: sdwan (IOS-XE cEdge CLI), ha / vpn (PAN-OS), control / omp / bfd / config (VIPTELA)
+# Section per device (inventory OS / CONN_TYPE):
+#   ARISTA_EOS  OS EOS / ARISTA_EOS            (eAPI; JSON output)
+#   CISCO_NXOS  OS NXOS                        (SSH)
+#   CISCO_IOSXE OS IOSXE or IOS                (SSH; also SD-WAN cEdges over SSH)
+#   PA_PANOS    OS PANOS                       (SSH, operational mode)
+#   VIPTELA     OS VIPTELA or CONN_TYPE VMANAGE_API  (SD-WAN Manager REST API, read-only)
+# '<...>' commands are templates: skipped by nv-datacollect, filled in by the agent / recipes.
+# Recipes (/data/skills/NAVI/references/RECIPES.yml) may only use commands listed here.
+# Rebuilt 2026-10-08 by NAVI setup; previous version in ~/backups/navi-rework-20261008T184250Z/.
+# CISCO_NXOS: in the Cisco vendor pack (navigator_packs/cisco/commands.yml)
+# CISCO_IOSXE: in the Cisco vendor pack (navigator_packs/cisco/commands.yml)
+# PA_PANOS: in the Palo Alto vendor pack (navigator_packs/paloalto/commands.yml)
+# VIPTELA: in the Cisco vendor pack (navigator_packs/cisco/commands.yml)
+# FORTIOS: in the Fortinet vendor pack (navigator_packs/fortinet/commands.yml)

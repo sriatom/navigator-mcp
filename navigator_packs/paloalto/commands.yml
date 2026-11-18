@@ -1,0 +1,40 @@
+# PAN-OS: allowed read commands by category (moved from atlas_inventory/catalog/COMMANDS.yml).
+PANOS:
+  system:
+  - show system info
+  - show system resources
+  - show system environmentals
+  - show clock
+  - show ntp
+  - show jobs all
+  - show admins all
+  - show config running
+  interfaces:
+  - show interface all
+  - show interface logical
+  - show interface hardware
+  - show interface <interface>
+  routing:
+  - show routing route
+  - show routing summary
+  - show routing interface
+  - show arp all
+  - show advanced-routing route
+  bgp:
+  - show routing protocol bgp summary
+  - show routing protocol bgp peer
+  ospf:
+  - show routing protocol ospf neighbor
+  - show routing protocol ospf interface
+  ha:
+  - show high-availability state
+  - show high-availability all
+  security:
+  - show running security-policy
+  - show running nat-policy
+  - show session info
+  - show counter global filter severity drop
+  vpn:
+  - show vpn ike-sa
+  - show vpn ipsec-sa
+  - show vpn tunnel

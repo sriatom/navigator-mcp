@@ -1,0 +1,166 @@
+{
+  "freeTextAnnotations": [],
+  "freeShapeAnnotations": [],
+  "trafficRateAnnotations": [],
+  "groupStyleAnnotations": [],
+  "networkNodeAnnotations": [],
+  "nodeAnnotations": [
+    {
+      "id": "PDSPINE1",
+      "position": {
+        "x": 0,
+        "y": 180
+      }
+    },
+    {
+      "id": "PDSPINE2",
+      "position": {
+        "x": 140,
+        "y": 140
+      }
+    },
+    {
+      "id": "PDLEAF1A",
+      "position": {
+        "x": -120,
+        "y": 440
+      }
+    },
+    {
+      "id": "PDLEAF1B",
+      "position": {
+        "x": 40,
+        "y": 440
+      }
+    },
+    {
+      "id": "PDLEAF2A",
+      "position": {
+        "x": 300,
+        "y": 440
+      }
+    },
+    {
+      "id": "PDLEAF2B",
+      "position": {
+        "x": 160,
+        "y": 440
+      }
+    },
+    {
+      "id": "PDSVCL1A",
+      "position": {
+        "x": 400,
+        "y": 280
+      }
+    },
+    {
+      "id": "PDSVCL1B",
+      "position": {
+        "x": 400,
+        "y": 540
+      }
+    },
+    {
+      "id": "WANFAB1A",
+      "position": {
+        "x": 620,
+        "y": 280
+      }
+    },
+    {
+      "id": "WANFAB1B",
+      "position": {
+        "x": 620,
+        "y": 560
+      }
+    },
+    {
+      "id": "PDFW1",
+      "position": {
+        "x": 480,
+        "y": 400
+      }
+    },
+    {
+      "id": "QASPINE1",
+      "position": {
+        "x": 880,
+        "y": 140
+      }
+    },
+    {
+      "id": "QASPINE2",
+      "position": {
+        "x": 1140,
+        "y": 180
+      }
+    },
+    {
+      "id": "QALEAF1A",
+      "position": {
+        "x": 1020,
+        "y": 520
+      }
+    },
+    {
+      "id": "QALEAF1B",
+      "position": {
+        "x": 1200,
+        "y": 520
+      }
+    },
+    {
+      "id": "QASVCL1A",
+      "position": {
+        "x": 820,
+        "y": 260
+      }
+    },
+    {
+      "id": "QASVCL1B",
+      "position": {
+        "x": 840,
+        "y": 540
+      }
+    },
+    {
+      "id": "QAFW1",
+      "position": {
+        "x": 720,
+        "y": 400
+      }
+    },
+    {
+      "id": "SERVICE1",
+      "position": {
+        "x": -60,
+        "y": 660
+      }
+    },
+    {
+      "id": "SERVICE2",
+      "position": {
+        "x": 220,
+        "y": 640
+      }
+    },
+    {
+      "id": "SERVICE3",
+      "position": {
+        "x": 480,
+        "y": 720
+      }
+    },
+    {
+      "id": "SERVICE4",
+      "position": {
+        "x": 1120,
+        "y": 640
+      }
+    }
+  ],
+  "edgeAnnotations": [],
+  "aliasEndpointAnnotations": [],
+  "viewerSettings": {}
+}

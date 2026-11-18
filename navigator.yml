@@ -1,0 +1,18 @@
+# NAVIGATOR settings. Paths and switches only; no secrets here. NAVIGATOR_BOOTSTRAP points at another copy.
+WORKSPACE: ~/workspace                         # project folders (data only, never software); must exist
+ADHOC: ADHOC_WORK                              # jobs without a project name go here
+STATE_PATH: ~/.navigator                       # lessons learned, scrambler maps, mode requests (mode 700)
+CONSUMER: NAVI                                 # env NAVIGATOR_CONSUMER overrides
+# DEFAULT_INVENTORY: INVENTORY_LAB             # ATLAS inventory for new projects
+# EXTRA_SKILLS: [~/my-skills]                  # optional: your own skill folders (one folder + SKILL.md each)
+# SCRAMBLER_MAPS: ~/.navigator/scrambler       # private real<->fake maps, one folder per project
+# KEEP_NETS: [192.0.2.0/24]                    # CIDRs the scrambler never maps
+# MODELS:                                      # docs/LOCAL_MODELS.md; NAVIGATOR itself never calls a cloud model
+#   HOST: cloud                                # the MCP host's model: cloud | local (env NAVIGATOR_HOST_MODEL)
+#   LOCAL: {URL: "http://127.0.0.1:11434/v1", MODEL: "qwen3.5:9b"}   # OpenAI-compatible, local addresses only
+APPROVAL:                                      # LOCKED -> OPEN needs /pushok, same channel as RUDDER changes
+  CHANNEL: hermes
+  HERMES_BIN: ~/.local/bin/hermes
+  APPROVAL_DIR: ~/.hermes/push-approvals
+  PROFILES: {NAVI: navi}
+  TTL_MIN: 30

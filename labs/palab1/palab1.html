@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palo Alto Firewall Lab (palab1)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the topology drawing leads, then NAT, verified flows, NAVIGATOR tests. */
+:root{
+  --bg:#f5f6f4; --panel:#ffffff; --fg:#1b2024; --muted:#5d666d; --line:#c9cfd2;
+  --fw:#c2410c; --fw-soft:#fde7dc; --eos:#1d5f8a; --eos-soft:#dcebf5; --host:#6b7280; --host-soft:#eceef0;
+  --ok:#1f7a45; --ok-soft:#ddf1e5; --bad:#a3262a; --bad-soft:#f6dddd; --warn:#8a5a00; --warn-soft:#fbefd2;
+  --display:"Archivo","Segoe UI",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111518; --panel:#181d21; --fg:#e4e8ea; --muted:#9aa4ab; --line:#333c42;
+  --fw:#fb8a52; --fw-soft:#3a2219; --eos:#6cb4e4; --eos-soft:#16293a; --host:#a9b1b8; --host-soft:#22282d;
+  --ok:#5fd08f; --ok-soft:#163223; --bad:#f08488; --bad-soft:#3a1c1e; --warn:#e8b65a; --warn-soft:#352a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111518; --panel:#181d21; --fg:#e4e8ea; --muted:#9aa4ab; --line:#333c42;
+  --fw:#fb8a52; --fw-soft:#3a2219; --eos:#6cb4e4; --eos-soft:#16293a; --host:#a9b1b8; --host-soft:#22282d;
+  --ok:#5fd08f; --ok-soft:#163223; --bad:#f08488; --bad-soft:#3a1c1e; --warn:#e8b65a; --warn-soft:#352a12; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--display);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+main{max-width:1060px;margin:0 auto;display:grid;gap:34px}
+h1{font-weight:800;font-size:clamp(28px,4vw,40px);letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-size:20px;font-weight:800;margin:0 0 10px;text-wrap:balance}
+h3{font-size:15px;font-weight:600;margin:18px 0 6px}
+p{margin:0;max-width:68ch}
+.lede{color:var(--muted);margin-top:8px}
+.mono,code{font-family:var(--mono);font-size:.88em}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.meta b{color:var(--fg);font-weight:500}
+.todo{border:1px solid var(--warn);background:var(--warn-soft);border-radius:8px;padding:14px 16px;display:grid;gap:8px}
+.todo h2{color:var(--warn);font-size:16px;margin:0}
+.todo ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+svg{display:block;min-width:900px;width:100%;height:auto}
+svg text{font-family:var(--mono)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--bg)}
+td.n{font-family:var(--mono);white-space:nowrap;color:var(--muted)}
+.pill{display:inline-block;font-family:var(--mono);font-size:12px;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.no{background:var(--bad-soft);color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin-top:10px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1.5px solid}
+.sw.fw{background:var(--fw-soft);border-color:var(--fw)} .sw.eos{background:var(--eos-soft);border-color:var(--eos)} .sw.h{background:var(--host-soft);border-color:var(--host)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.cols>*{min-width:0}
+.mode{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--panel)}
+.mode b{font-family:var(--mono);font-weight:500}
+blockquote{margin:0;font-family:var(--mono);font-size:12.5px;background:var(--bg);border-left:3px solid var(--line);padding:6px 10px;color:var(--fg)}
+</style>
+
+<main>
+<header>
+  <h1>Palo Alto Firewall Lab</h1>
+  <p class="lede">Three Palo Alto firewalls and three Arista switches, with Linux test hosts that send real traffic: NAT, multi-firewall paths and BGP for NAVIGATOR to reason about.</p>
+  <div class="meta"><span>lab <b>palab1</b></span><span>PAN-OS <b>11.2.8</b></span><span>cEOS <b>4.33.8M</b></span><span>mgmt <b>172.31.12.0/24</b></span><span>login <b>admin / admin</b></span><span>flows <b>22/22 pass</b></span></div>
+</header>
+
+
+<section>
+  <h2>Topology</h2>
+  <div class="scroll">
+  <svg viewBox="0 0 1000 540" role="img" aria-label="palab1 topology: ISP1, PA-EDGE, CORE1, PA-DC, WAN1, PA-BR and six hosts">
+    <defs><style>
+      .lk{stroke:var(--line);stroke-width:2.5;fill:none}
+      .fwb{fill:var(--fw-soft);stroke:var(--fw);stroke-width:2}
+      .eob{fill:var(--eos-soft);stroke:var(--eos);stroke-width:2}
+      .hb{fill:var(--host-soft);stroke:var(--host);stroke-width:1.5}
+      .nm{font-size:14px;font-weight:500;fill:var(--fg)}
+      .sb{font-size:11px;fill:var(--muted)}
+      .net{font-size:11px;fill:var(--muted)}
+      .zn{font-size:10.5px;fill:var(--fw);font-weight:500}
+      .nat{font-size:11px;fill:var(--fw)}
+    </style></defs>
+    <!-- links -->
+    <path class="lk" d="M125 80 H200"/><path class="lk" d="M330 80 H420"/><path class="lk" d="M560 80 H660"/>
+    <path class="lk" d="M490 103 V227"/><path class="lk" d="M125 250 H420"/><path class="lk" d="M560 250 H660"/>
+    <path class="lk" d="M790 240 L860 190"/><path class="lk" d="M790 262 L860 310"/>
+    <path class="lk" d="M490 273 V407"/><path class="lk" d="M560 430 H660"/><path class="lk" d="M790 430 H860"/>
+    <!-- subnet labels -->
+    <text class="net" x="335" y="70">198.51.100.0/28</text>
+    <text class="net" x="138" y="70">203.0.113.0/24</text>
+    <text class="net" x="568" y="70">172.16.50.0/24</text>
+    <text class="net" x="498" y="170">10.255.1.0/30</text>
+    <text class="net" x="138" y="240">10.10.10.0/24</text>
+    <text class="net" x="566" y="240">10.255.2.0/30</text>
+    <text class="net" x="800" y="200">10.20.20.0/24</text>
+    <text class="net" x="800" y="312">10.30.30.0/24</text>
+    <text class="net" x="498" y="345">10.255.3.0/30</text>
+    <text class="net" x="566" y="420">10.255.4.0/30</text>
+    <text class="net" x="796" y="420">10.10.10.0/24</text>
+    <!-- zone labels at firewall ports -->
+    <text class="zn" x="378" y="96">OUTSIDE</text><text class="zn" x="566" y="96">DMZ</text><text class="zn" x="498" y="122">INSIDE</text>
+    <text class="zn" x="612" y="266">CORE</text><text class="zn" x="800" y="228">APP</text><text class="zn" x="800" y="280">DB</text>
+    <text class="zn" x="612" y="446">WAN</text><text class="zn" x="800" y="446">BR-LAN</text>
+    <!-- nodes -->
+    <rect class="hb" x="20" y="60" width="105" height="40" rx="20"/><text class="nm" x="72" y="78" text-anchor="middle">INET-HOST</text><text class="sb" x="72" y="93" text-anchor="middle">203.0.113.10</text>
+    <rect class="eob" x="200" y="56" width="130" height="48" rx="6"/><text class="nm" x="265" y="77" text-anchor="middle">ISP1</text><text class="sb" x="265" y="93" text-anchor="middle">AS 64500 · 8.8.8.8</text>
+    <rect class="fwb" x="420" y="56" width="140" height="48" rx="6"/><text class="nm" x="490" y="77" text-anchor="middle">PA-EDGE</text><text class="sb" x="490" y="93" text-anchor="middle">AS 65001</text>
+    <rect class="hb" x="660" y="60" width="130" height="40" rx="20"/><text class="nm" x="725" y="78" text-anchor="middle">DMZ-WEB</text><text class="sb" x="725" y="93" text-anchor="middle">172.16.50.10:8080</text>
+    <rect class="hb" x="20" y="230" width="105" height="40" rx="20"/><text class="nm" x="72" y="248" text-anchor="middle">USER-HQ</text><text class="sb" x="72" y="263" text-anchor="middle">10.10.10.10</text>
+    <rect class="eob" x="420" y="227" width="140" height="48" rx="6"/><text class="nm" x="490" y="248" text-anchor="middle">CORE1</text><text class="sb" x="490" y="264" text-anchor="middle">AS 65010</text>
+    <rect class="fwb" x="660" y="227" width="130" height="48" rx="6"/><text class="nm" x="725" y="248" text-anchor="middle">PA-DC</text><text class="sb" x="725" y="264" text-anchor="middle">AS 65002</text>
+    <rect class="hb" x="860" y="170" width="125" height="40" rx="20"/><text class="nm" x="922" y="188" text-anchor="middle">APP1</text><text class="sb" x="922" y="203" text-anchor="middle">10.20.20.10:8080</text>
+    <rect class="hb" x="860" y="290" width="125" height="40" rx="20"/><text class="nm" x="922" y="308" text-anchor="middle">DB1</text><text class="sb" x="922" y="323" text-anchor="middle">10.30.30.10:5432</text>
+    <rect class="eob" x="420" y="407" width="140" height="48" rx="6"/><text class="nm" x="490" y="428" text-anchor="middle">WAN1</text><text class="sb" x="490" y="444" text-anchor="middle">AS 65020</text>
+    <rect class="fwb" x="660" y="407" width="130" height="48" rx="6"/><text class="nm" x="725" y="428" text-anchor="middle">PA-BR</text><text class="sb" x="725" y="444" text-anchor="middle">AS 65003</text>
+    <rect class="hb" x="860" y="410" width="125" height="40" rx="20"/><text class="nm" x="922" y="428" text-anchor="middle">USER-BR</text><text class="sb" x="922" y="443" text-anchor="middle">10.10.10.10</text>
+    <!-- NAT callouts -->
+    <text class="nat" x="420" y="30">VIP 198.51.100.5:80 → DMZ-WEB:8080 · users PAT .6 · DMZ-WEB static .7</text>
+    <text class="nat" x="660" y="160">VIP 10.20.20.100:443 → APP1:8080</text>
+    <text class="nat" x="660" y="490">10.10.10.0/24 ⇄ 100.64.10.0/24 (1:1)</text>
+    <text class="nat" x="660" y="506">overlaps HQ users on purpose</text>
+    <text class="sb" x="20" y="520">eBGP on every link · ISP1 sends 0/0 and accepts only 198.51.100.0/24 · mgmt 172.31.12.0/24 (hosts: VRF MGMT)</text>
+  </svg>
+  </div>
+  <div class="legend"><span><i class="sw fw"></i>Palo Alto PA-VM</span><span><i class="sw eos"></i>Arista cEOS</span><span><i class="sw h"></i>test host (nginx)</span><span style="color:var(--fw)">orange labels: zones and NAT</span></div>
+</section>
+
+<section>
+  <h2>NAT rules</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Firewall</th><th>Rule</th><th>Original</th><th>Translated</th></tr></thead>
+    <tbody>
+      <tr><td>PA-EDGE</td><td class="mono">DNAT-WEB-PUBLIC</td><td>any → 198.51.100.5:80 (OUTSIDE)</td><td>172.16.50.10:8080</td></tr>
+      <tr><td>PA-EDGE</td><td class="mono">UTURN-WEB-VIP</td><td>inside → 198.51.100.5:80 (hairpin)</td><td>172.16.50.10:8080</td></tr>
+      <tr><td>PA-EDGE</td><td class="mono">SNAT-DMZ-WEB</td><td>172.16.50.10 → internet</td><td>source 198.51.100.7 (static)</td></tr>
+      <tr><td>PA-EDGE</td><td class="mono">SNAT-INSIDE-PAT</td><td>10.10.10.0/24, 100.64.10.0/24 → internet</td><td>source 198.51.100.6 (PAT)</td></tr>
+      <tr><td>PA-DC</td><td class="mono">DNAT-APP-VIP</td><td>→ 10.20.20.100:443</td><td>10.20.20.10:8080</td></tr>
+      <tr><td>PA-BR</td><td class="mono">DNAT-BR-HOST</td><td>→ 100.64.10.10 (from WAN)</td><td>10.10.10.10</td></tr>
+      <tr><td>PA-BR</td><td class="mono">STATIC-BR-1TO1</td><td>10.10.10.0/24 → WAN</td><td>source 100.64.10.0/24 (1:1)</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Verified flows</h2>
+  <p class="lede">Real traffic from the hosts, checked against the design with <code>flows.sh</code> on the containerlab host.</p>
+  <div class="scroll" style="margin-top:10px"><table>
+    <thead><tr><th>#</th><th>From → to</th><th>Result</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="n">F1</td><td>USER-HQ → 203.0.113.10:80</td><td><span class="pill ok">allowed</span></td><td>PAT to 198.51.100.6</td></tr>
+      <tr><td class="n">F2</td><td>USER-HQ → ping 8.8.8.8</td><td><span class="pill ok">allowed</span></td><td>ALLOW-HQ-TO-INTERNET</td></tr>
+      <tr><td class="n">F3</td><td>INET-HOST → 198.51.100.5:80</td><td><span class="pill ok">allowed</span></td><td>DNAT to DMZ-WEB:8080</td></tr>
+      <tr><td class="n">F4</td><td>INET-HOST → 172.16.50.10:8080</td><td><span class="pill no">blocked</span></td><td>only the VIP is exposed</td></tr>
+      <tr><td class="n">F5</td><td>USER-HQ → 198.51.100.5:80</td><td><span class="pill ok">allowed</span></td><td>hairpin NAT</td></tr>
+      <tr><td class="n">F6</td><td>USER-HQ → DMZ-WEB:8080</td><td><span class="pill ok">allowed</span></td><td>ALLOW-HQ-TO-WEB</td></tr>
+      <tr><td class="n">F7</td><td>USER-HQ → APP1:8080</td><td><span class="pill ok">allowed</span></td><td>PA-DC ALLOW-CLIENTS-TO-APP</td></tr>
+      <tr><td class="n">F8</td><td>USER-HQ → 10.20.20.100:443</td><td><span class="pill ok">allowed</span></td><td>PA-DC DNAT-APP-VIP</td></tr>
+      <tr><td class="n">F9</td><td>USER-HQ → DB1:5432</td><td><span class="pill no">blocked</span></td><td>PA-DC DENY-CORE-TO-DB</td></tr>
+      <tr><td class="n">F10</td><td>APP1 → DB1:5432</td><td><span class="pill ok">allowed</span></td><td>ALLOW-APP-TO-DB</td></tr>
+      <tr><td class="n">F11</td><td>DMZ-WEB → APP1:8080</td><td><span class="pill ok">allowed</span></td><td>two firewalls: PA-EDGE then PA-DC</td></tr>
+      <tr><td class="n">F12</td><td>DMZ-WEB → DB1:5432</td><td><span class="pill no">blocked</span></td><td>PA-EDGE DENY-DMZ-TO-INSIDE</td></tr>
+      <tr><td class="n">F13</td><td>DMZ-WEB → USER-HQ:80</td><td><span class="pill no">blocked</span></td><td>PA-EDGE DENY-DMZ-TO-INSIDE</td></tr>
+      <tr><td class="n">F14</td><td>DMZ-WEB → 203.0.113.10:80</td><td><span class="pill ok">allowed</span></td><td>static SNAT 198.51.100.7</td></tr>
+      <tr><td class="n">F15</td><td>USER-BR → APP1:8080</td><td><span class="pill ok">allowed</span></td><td>arrives as 100.64.10.10</td></tr>
+      <tr><td class="n">F16</td><td>USER-BR → DB1:5432</td><td><span class="pill no">blocked</span></td><td>PA-DC DENY-CORE-TO-DB</td></tr>
+      <tr><td class="n">F17</td><td>USER-BR → 203.0.113.10:80</td><td><span class="pill ok">allowed</span></td><td>double NAT: 100.64.10.10, then 198.51.100.6</td></tr>
+      <tr><td class="n">F18</td><td>USER-BR → ping 8.8.8.8</td><td><span class="pill no">blocked</span></td><td>PA-BR allows; PA-EDGE allows only http for the branch</td></tr>
+      <tr><td class="n">F19</td><td>APP1 → 100.64.10.10:80</td><td><span class="pill ok">allowed</span></td><td>PA-BR DNAT-BR-HOST</td></tr>
+      <tr><td class="n">F20</td><td>USER-HQ → 100.64.10.10:80</td><td><span class="pill no">blocked</span></td><td>overlapping 10.10.10.0/24, PA-BR DENY-HQ-OVERLAP</td></tr>
+      <tr><td class="n">F21</td><td>DB1 → 203.0.113.10:80</td><td><span class="pill no">blocked</span></td><td>PA-DC has no DB → CORE rule</td></tr>
+      <tr><td class="n">F22</td><td>INET-HOST → 10.10.10.10</td><td><span class="pill no">blocked</span></td><td>ISP1 holds no private routes</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>Hosts and traffic</h2>
+  <div class="cols">
+    <div class="mode"><b>SSH to a host</b><br><code>ssh admin@172.31.12.33</code> (password admin, sudo)<br>Management <code>eth0</code> sits in Linux VRF <code>MGMT</code>; tests on <code>eth1</code> always cross the lab.</div>
+    <div class="mode"><b>Tools on every host</b><br>traceroute (<code>-I</code> through firewalls), mtr, iperf3, nmap, tcpdump, ab, curl, nc</div>
+  </div>
+  <div class="scroll" style="margin-top:12px"><table>
+    <thead><tr><th>On the containerlab host, in the lab folder</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">bash flows.sh</td><td>22 pass/fail flow tests</td></tr>
+      <tr><td class="mono">bash traffic.sh start 60</td><td>60 min of mixed traffic: web and ping on allowed paths, some denied attempts, ab bursts on the VIPs, iperf3 20 Mbit/s to APP1</td></tr>
+      <tr><td class="mono">bash traffic.sh stop</td><td>stops it (<code>status</code> shows the loops)</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>NAVIGATOR test cases</h2>
+  <div class="cols">
+    <div class="mode"><b>CLOUD</b><br>Project <code>PALAB1_CLOUD</code>: the chat runs on a cloud model</div>
+    <div class="mode"><b>LOCAL</b><br>Project <code>PALAB1_LOCAL</code>: device data stays on your network</div>
+  </div>
+  <h3>Start</h3>
+  <blockquote>New project PALAB1_CLOUD, CLOUD, inventory PALAB1, job: firewall policy and NAT review of the Palo Alto Firewall Lab.</blockquote>
+  <div class="scroll" style="margin-top:12px"><table>
+    <thead><tr><th>#</th><th>Ask NAVIGATOR</th><th>Correct answer</th></tr></thead>
+    <tbody>
+      <tr><td class="n">P0.2</td><td>Show BGP summary on all devices in the project.</td><td>6 eBGP sessions Established</td></tr>
+      <tr><td class="n">P1.1</td><td>Can 203.0.113.10 reach the DMZ web server? Which IP/port, which NAT and security rules?</td><td>198.51.100.5:80 → 172.16.50.10:8080; DNAT-WEB-PUBLIC, ALLOW-INET-TO-WEB-VIP</td></tr>
+      <tr><td class="n">P1.2</td><td>Which public IP does HQ user 10.10.10.10 appear as? And DMZ-WEB?</td><td>198.51.100.6 (PAT); DMZ-WEB 198.51.100.7</td></tr>
+      <tr><td class="n">P1.3</td><td>Can HQ users reach 10.30.30.10:5432? Show the rule.</td><td>No: PA-DC DENY-CORE-TO-DB; only APP1 may</td></tr>
+      <tr><td class="n">P1.4</td><td>Trace DMZ-WEB to APP1:8080 hop by hop with every rule it hits.</td><td>PA-EDGE ALLOW-WEB-TO-APP, CORE1, PA-DC ALLOW-CLIENTS-TO-APP</td></tr>
+      <tr><td class="n">P1.5</td><td>Branch user: ping 8.8.8.8 fails but web works. Why?</td><td>PA-EDGE allows only TCP-80 for NET-BR-NAT</td></tr>
+      <tr><td class="n">P1.6</td><td>HQ user cannot open http://100.64.10.10. Why, and the fix?</td><td>Overlapping 10.10.10.0/24; DENY-HQ-OVERLAP; fix with twice-NAT or renumbering</td></tr>
+      <tr><td class="n">P1.7</td><td>What does 10.20.20.100:443 map to?</td><td>APP1 10.20.20.10:8080 (DNAT-APP-VIP)</td></tr>
+      <tr><td class="n">P1.8</td><td>Does the ISP learn any private routes from us?</td><td>No: ISP1 receives 7, accepts 0 (RM-CUST-IN)</td></tr>
+      <tr><td class="n">P1.9</td><td>On PA-EDGE run test security-policy-match and test nat-policy-match for 203.0.113.10 → 198.51.100.5:80.</td><td>ALLOW-INET-TO-WEB-VIP; DNAT-WEB-PUBLIC</td></tr>
+      <tr><td class="n">P1.10</td><td>All NAT rules on the three firewalls in one table.</td><td>The 7 rules above</td></tr>
+      <tr><td class="n">P2.2</td><td>After running flows.sh: which rules have hits, which never?</td><td><code>show rule-hit-count</code>; DENY-CORE-TO-DB, DENY-HQ-OVERLAP hit</td></tr>
+      <tr><td class="n">P3.1</td><td>Draw the topology with zones and NAT from what you collected.</td><td>diagram file in the project</td></tr>
+      <tr><td class="n">P3.2</td><td>Excel of all security rules (firewall, rule, from, to, source, destination, service, action).</td><td>.xlsx in OUT/</td></tr>
+      <tr><td class="n">P4.1</td><td>Plan: let branch users ping 8.8.8.8. Commands, firewall, rollback.</td><td>new ping rule for NET-BR-NAT on PA-EDGE, plan only</td></tr>
+    </tbody></table></div>
+</section>
+</main>
+</html>

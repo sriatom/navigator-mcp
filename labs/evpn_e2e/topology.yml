@@ -1,0 +1,234 @@
+# evpn_e2e: Arista EVPN lab for NAVIGATOR (containerlab).
+# Two EVPN fabrics (PD and QA), a WAN border fabric, two firewalls (cEOS), four service nodes.
+# Every node: cEOS, login admin / admin. Mgmt 172.31.11.0/24.
+# Start:  sudo containerlab deploy -t topology.yml      Stop: sudo containerlab destroy -t topology.yml
+name: evpn_e2e
+mgmt:
+  network: evpn_e2e
+  ipv4-subnet: 172.31.11.0/24
+  mtu: 1500
+
+topology:
+  kinds:
+    ceos:
+      image: ceos:4336m
+      env:
+        MGMT_VRF: M
+        DOMAIN_NAME: example.com
+      startup-config: templates/base__ceos.tmpl
+
+  nodes:
+    PDSPINE1:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.10
+      startup-config: configs/PDSPINE1.txt
+
+    PDSPINE2:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.20
+      startup-config: configs/PDSPINE2.txt
+
+    PDLEAF1A:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.11
+      startup-config: configs/PDLEAF1A.txt
+
+    PDLEAF1B:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.12
+      startup-config: configs/PDLEAF1B.txt
+
+    PDLEAF2A:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.21
+      startup-config: configs/PDLEAF2A.txt
+
+    PDLEAF2B:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.22
+      startup-config: configs/PDLEAF2B.txt
+
+    PDSVCL1A:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.31
+      startup-config: configs/PDSVCL1A.txt
+
+    PDSVCL1B:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.32
+      startup-config: configs/PDSVCL1B.txt
+
+    WANFAB1A:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.61
+      startup-config: configs/WANFAB1A.txt
+
+    WANFAB1B:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.62
+      startup-config: configs/WANFAB1B.txt
+
+    PDFW1:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.41
+      startup-config: configs/PDFW1-ARS.txt
+
+    QASPINE1:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.110
+      startup-config: configs/QASPINE1.txt
+
+    QASPINE2:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.120
+      startup-config: configs/QASPINE2.txt
+
+    QALEAF1A:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.111
+      startup-config: configs/QALEAF1A.txt
+
+    QALEAF1B:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.112
+      startup-config: configs/QALEAF1B.txt
+
+    QASVCL1A:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.131
+      startup-config: configs/QASVCL1A.txt
+
+    QASVCL1B:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.132
+      startup-config: configs/QASVCL1B.txt
+
+    QAFW1:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.141
+      startup-config: configs/QAFW1-ARS.txt
+
+    SERVICE1:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.51
+      startup-config: configs/SERVICE1.txt
+
+    SERVICE2:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.52
+      startup-config: configs/SERVICE2.txt
+
+    SERVICE3:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.53
+      startup-config: configs/SERVICE3.txt
+
+    SERVICE4:
+      kind: ceos
+      mgmt-ipv4: 172.31.11.54
+      startup-config: configs/SERVICE4.txt
+
+  links:
+    # ****** PDFAB ********
+    # ----------------------
+
+    # PD/SPINE_LINKS: SPINE1 to LEAF connections
+    - endpoints: ["PDSPINE1:eth1", "PDLEAF1A:eth1"]
+    - endpoints: ["PDSPINE1:eth2", "PDLEAF1B:eth1"]
+    - endpoints: ["PDSPINE1:eth3", "PDLEAF2A:eth1"]
+    - endpoints: ["PDSPINE1:eth4", "PDLEAF2B:eth1"]
+    - endpoints: ["PDSPINE1:eth5", "PDSVCL1A:eth1"]
+    - endpoints: ["PDSPINE1:eth6", "PDSVCL1B:eth1"]
+
+    # PD/SPINE_LINKS: SPINE2 to LEAF connections
+    - endpoints: ["PDSPINE2:eth1", "PDLEAF1A:eth2"]
+    - endpoints: ["PDSPINE2:eth2", "PDLEAF1B:eth2"]
+    - endpoints: ["PDSPINE2:eth3", "PDLEAF2A:eth2"]
+    - endpoints: ["PDSPINE2:eth4", "PDLEAF2B:eth2"]
+    - endpoints: ["PDSPINE2:eth5", "PDSVCL1A:eth2"]
+    - endpoints: ["PDSPINE2:eth6", "PDSVCL1B:eth2"]
+
+    # PD/MLAG: LEAF1A/LEAF1B
+    - endpoints: ["PDLEAF1A:eth3", "PDLEAF1B:eth3"]
+    - endpoints: ["PDLEAF1A:eth4", "PDLEAF1B:eth4"]
+
+    # PD/MLAG: LEAF2A/LEAF2B
+    - endpoints: ["PDLEAF2A:eth3", "PDLEAF2B:eth3"]
+    - endpoints: ["PDLEAF2A:eth4", "PDLEAF2B:eth4"]
+
+    # PD/MLAG: SVCLEAF1A/SVCLEAF1B
+    - endpoints: ["PDSVCL1A:eth3", "PDSVCL1B:eth3"]
+    - endpoints: ["PDSVCL1A:eth4", "PDSVCL1B:eth4"]
+
+    # PD/SERVICE1 Connections
+    - endpoints: ["PDLEAF1A:eth5", "SERVICE1:eth1"]
+    - endpoints: ["PDLEAF1B:eth5", "SERVICE1:eth2"]
+
+    # PD/SERVICE2 Connections
+    - endpoints: ["PDLEAF2A:eth5", "SERVICE2:eth1"]
+    - endpoints: ["PDLEAF2B:eth5", "SERVICE2:eth2"]
+
+    # ****** FIREWALLs ********
+    # ----------------------
+
+    # PD/FW1 Connections
+    - endpoints: ["PDSVCL1A:eth7", "PDFW1:eth1"]
+    - endpoints: ["PDSVCL1B:eth7", "PDFW1:eth2"]
+
+    # QA/FW1 Connections
+    - endpoints: ["QASVCL1A:eth7", "QAFW1:eth1"]
+    - endpoints: ["QASVCL1B:eth7", "QAFW1:eth2"]
+
+    # ****** QAFAB ********
+    # ----------------------
+
+    # QA/SPINE_LINKS: SPINE1 to LEAF connections
+    - endpoints: ["QASPINE1:eth1", "QALEAF1A:eth1"]
+    - endpoints: ["QASPINE1:eth2", "QALEAF1B:eth1"]
+    - endpoints: ["QASPINE1:eth5", "QASVCL1A:eth1"]
+    - endpoints: ["QASPINE1:eth6", "QASVCL1B:eth1"]
+
+    # QA/SPINE_LINKS: SPINE2 to LEAF connections
+    - endpoints: ["QASPINE2:eth1", "QALEAF1A:eth2"]
+    - endpoints: ["QASPINE2:eth2", "QALEAF1B:eth2"]
+    - endpoints: ["QASPINE2:eth5", "QASVCL1A:eth2"]
+    - endpoints: ["QASPINE2:eth6", "QASVCL1B:eth2"]
+
+    # QA/MLAG: QALEAF1A/QALEAF1B
+    - endpoints: ["QALEAF1A:eth3", "QALEAF1B:eth3"]
+    - endpoints: ["QALEAF1A:eth4", "QALEAF1B:eth4"]
+
+    # QA/MLAG: SVCLEAF1A/SVCLEAF1B
+    - endpoints: ["QASVCL1A:eth3", "QASVCL1B:eth3"]
+    - endpoints: ["QASVCL1A:eth4", "QASVCL1B:eth4"]
+
+    # QA/SERVICE4 Connections
+    - endpoints: ["QALEAF1A:eth5", "SERVICE4:eth1"]
+    - endpoints: ["QALEAF1B:eth5", "SERVICE4:eth2"]
+
+    # ****** WANFAB ********
+    # ----------------------
+
+    # WANFAB/PDFAB: Connectivity between PROD Fabric/Service Leaf/WAN Leaf
+    - endpoints: ["PDSVCL1A:eth5", "WANFAB1A:eth1"]
+    - endpoints: ["PDSVCL1A:eth6", "WANFAB1B:eth1"]
+    - endpoints: ["PDSVCL1B:eth5", "WANFAB1A:eth2"]
+    - endpoints: ["PDSVCL1B:eth6", "WANFAB1B:eth2"]
+
+    # WANFAB/QAFAB: Connectivity between PROD Fabric/Service Leaf/WAN Leaf
+    - endpoints: ["QASVCL1A:eth5", "WANFAB1A:eth5"]
+    - endpoints: ["QASVCL1A:eth6", "WANFAB1B:eth5"]
+    - endpoints: ["QASVCL1B:eth5", "WANFAB1A:eth6"]
+    - endpoints: ["QASVCL1B:eth6", "WANFAB1B:eth6"]
+
+    # WANFAB/MLAG: WANLEAF1A/WANLEAF1B
+    - endpoints: ["WANFAB1A:eth3", "WANFAB1B:eth3"]
+    - endpoints: ["WANFAB1A:eth4", "WANFAB1B:eth4"]
+
+    # WANFAB/SERVICE3:HOSTS Connections
+    - endpoints: ["WANFAB1A:eth9", "SERVICE3:eth1"]
+    - endpoints: ["WANFAB1B:eth9", "SERVICE3:eth2"]
+
+    # WANFAB/SERVICE3:ISP1/2 Connections
+    - endpoints: ["WANFAB1A:eth10", "SERVICE3:eth3"]
+    - endpoints: ["WANFAB1B:eth10", "SERVICE3:eth4"]

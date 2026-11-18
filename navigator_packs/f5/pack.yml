@@ -1,0 +1,28 @@
+# F5 BIG-IP: vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: f5
+vendor: F5
+description: F5 BIG-IP
+platforms:
+  BIGIP:
+    vendor: F5
+    aliases:
+    - F5
+    - F5_BIGIP
+    - TMOS
+    - F5_TMSH
+    netmiko: f5_tmsh
+    pyats: bigip
+    ansible: f5networks.f5_modules
+    conn:
+    - API
+    - SSH
+    reads: delegated:f5
+    writes: delegated:f5
+methods:
+  f5:
+    adapter: delegated:f5
+    conn: API
+    port: 443
+    available: false
+    note: 'an F5 MCP server: not installed / not wired yet'

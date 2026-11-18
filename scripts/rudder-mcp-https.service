@@ -1,0 +1,16 @@
+# systemd user unit: rudder-mcp over HTTPS with logins (navigator_gate). Install: docs/HTTPS.md.
+[Unit]
+Description=RUDDER MCP server over HTTPS (port 8793)
+After=network-online.target atlas-link.service
+Wants=atlas-link.service
+
+[Service]
+ExecStart=%h/navigator/.venv/bin/rudder-mcp --serve
+Environment=NAVIGATOR_BOOTSTRAP=%h/.config/navigator/navigator.yml
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target

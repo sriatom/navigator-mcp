@@ -1,0 +1,46 @@
+vedge-nyc-01# show running-config
+system
+ host-name               vedge-nyc-01
+ system-ip               1.1.10.1
+ site-id                 1001
+ organization-name       "Globex Corporation - 2026"
+ sp-organization-name    "Globex Corporation - 2026"
+ location                "1 Liberty Plaza, New York"
+ vbond vbond.globex-sdwan.com port 12346
+ aaa
+  auth-order local tacacs
+  usergroup basic
+  !
+  user admin
+   password $6$Rp1Xyz$9QeP2sSmN0dX4ZTn6BqRk1Gx8pQ3rV7hE2sD5tW9uY0aB1cC2dE3fF4gG5hH6iI7jJ8kK9lL0mM1nN2oO3pP
+  !
+  user ktanaka
+   password $6$Ab2Cde$ZyXwVuTsRqPoNmLkJiHgFeDcBa9876543210ZyXwVuTsRqPoNmLkJiHgFeDcBa9876543210ZyXwVuTsRq
+   group    netadmin
+  !
+ !
+ tacacs
+  server 10.10.1.30
+   vpn        512
+   secret-key $8$Gl0bexViptelaTacacsSecretBlob==
+  !
+ !
+!
+vpn 0
+ interface ge0/0
+  description "INET - Spectrum Business acct 8812-4471"
+  ip address 71.71.10.2/30
+  tunnel-interface
+   encapsulation ipsec
+   color biz-internet
+  !
+  no shutdown
+ !
+ ip route 0.0.0.0/0 71.71.10.1
+!
+vpn 512
+ interface eth0
+  ip address 10.10.255.21/24
+  no shutdown
+ !
+!

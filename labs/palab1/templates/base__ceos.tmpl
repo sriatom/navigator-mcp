@@ -1,0 +1,105 @@
+! cEOS base template for containerlab (NAVIGATOR labs). Login admin / admin.
+
+hostname {{ .ShortName }}
+!
+dns domain {{ .Env.DOMAIN_NAME }}
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret admin
+!
+!
+spanning-tree mode mstp
+!
+!# *** MSTP CONFIG ***
+!spanning-tree edge-port bpduguard default
+!spanning-tree vlan-id 1-4094 priority 32768
+!
+!# *** 
+service routing protocols model multi-agent
+!
+{{- if .Env.MGMT_VRF }}
+vrf instance {{ .Env.MGMT_VRF }}
+   exit
+!
+{{end}}
+{{ if .MgmtIPv4Gateway }}ip route {{ if .Env.MGMT_VRF }}vrf {{ .Env.MGMT_VRF }} {{end}}0.0.0.0/0 {{ .MgmtIPv4Gateway }}{{end}}
+{{ if .MgmtIPv6Gateway }}ipv6 route {{ if .Env.MGMT_VRF }}vrf {{ .Env.MGMT_VRF }} {{end}}::0/0 {{ .MgmtIPv6Gateway }}{{end}}
+!
+interface {{ .MgmtIntf }}
+{{ if .Env.MGMT_VRF }} vrf {{ .Env.MGMT_VRF }}{{end}}
+{{ if .MgmtIPv4Address }}ip address {{ .MgmtIPv4Address }}/{{.MgmtIPv4PrefixLength}}{{end}}
+{{ if .MgmtIPv6Address }}ipv6 address {{ .MgmtIPv6Address }}/{{.MgmtIPv6PrefixLength}}{{end}}
+exit
+!
+!
+management api gnmi
+   transport grpc default
+{{- if .Env.MGMT_VRF }} 
+vrf {{ .Env.MGMT_VRF }}
+   no shutdown 
+   exit
+{{end}}
+!
+!
+management api netconf
+   transport ssh default
+{{- if .Env.MGMT_VRF }} 
+vrf {{ .Env.MGMT_VRF }}
+   no shutdown
+   exit
+{{end}}
+!
+!
+management api http-commands
+   no shutdown
+{{- if .Env.MGMT_VRF }} 
+vrf {{ .Env.MGMT_VRF }}
+   no shutdown 
+   exit
+{{end}}
+!
+!
+management console
+   idle-timeout 30
+   exit
+!
+!
+management ssh
+   authentication mode password
+   !
+{{- if .Env.MGMT_VRF }} 
+vrf {{ .Env.MGMT_VRF }}
+   exit
+{{end}}
+!
+!
+!
+ip routing
+!
+{{ if .Env.MGMT_VRF }} ip routing vrf {{ .Env.MGMT_VRF }}{{end}}
+!
+!
+ip ssh client source-interface {{ .MgmtIntf }}
+!
+end
+!
+
+// DNS setup - static
+{{- if .Env.MGMT_VRF }} 
+!
+ip name-server vrf {{ .Env.MGMT_VRF }} 8.8.4.4
+ip name-server vrf {{ .Env.MGMT_VRF }} 8.8.8.8
+!
+!
+// NTP setup - static
+ntp local-interface vrf {{ .Env.MGMT_VRF }} Management0
+ntp server vrf {{ .Env.MGMT_VRF }} 0.pool.ntp.org prefer
+ntp server vrf {{ .Env.MGMT_VRF }} 2.pool.ntp.org
+!
+vrf {{ .Env.MGMT_VRF }}
+   exit
+{{end}}
+!
+
+

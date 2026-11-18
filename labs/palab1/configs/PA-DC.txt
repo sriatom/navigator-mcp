@@ -1,0 +1,172 @@
+set mgt-config users admin phash $1$navlab$yL5x/5ROJK4SkLp61HOoI0
+set deviceconfig system hostname PA-DC
+set deviceconfig system domain example.com
+set deviceconfig system timezone UTC
+set deviceconfig system type static
+set deviceconfig system ip-address 10.0.0.15 netmask 255.255.255.0 default-gateway 10.0.0.2
+set deviceconfig system dns-setting servers primary 9.9.9.9
+set deviceconfig system service disable-telnet yes
+set deviceconfig system service disable-http yes
+set network profiles interface-management-profile PING_ONLY ping yes
+set network profiles interface-management-profile MANAGEMENT_ACCESS permitted-ip 10.0.0.0/8
+set network profiles interface-management-profile MANAGEMENT_ACCESS permitted-ip 172.16.0.0/12
+set network profiles interface-management-profile MANAGEMENT_ACCESS ssh yes
+set network profiles interface-management-profile MANAGEMENT_ACCESS https yes
+set network profiles interface-management-profile MANAGEMENT_ACCESS ping yes
+set service TCP-80 protocol tcp port 80
+set service TCP-443 protocol tcp port 443
+set service TCP-8080 protocol tcp port 8080
+set service TCP-5432 protocol tcp port 5432
+set service TCP-5201-IPERF protocol tcp port 5201
+set network interface ethernet ethernet1/1 layer3 ip 10.255.2.2/30
+set network interface ethernet ethernet1/1 layer3 interface-management-profile PING_ONLY
+set network interface ethernet ethernet1/1 layer3 lldp enable yes
+set network interface ethernet ethernet1/1 comment "CORE:CORE1"
+set network virtual-router default interface ethernet1/1
+set zone CORE network layer3 ethernet1/1
+set import network interface ethernet1/1
+set network interface ethernet ethernet1/2 layer3 ip 10.20.20.1/24
+set network interface ethernet ethernet1/2 layer3 interface-management-profile PING_ONLY
+set network interface ethernet ethernet1/2 layer3 lldp enable yes
+set network interface ethernet ethernet1/2 comment "APP:APP1"
+set network virtual-router default interface ethernet1/2
+set zone APP network layer3 ethernet1/2
+set import network interface ethernet1/2
+set network interface ethernet ethernet1/3 layer3 ip 10.30.30.1/24
+set network interface ethernet ethernet1/3 layer3 interface-management-profile PING_ONLY
+set network interface ethernet ethernet1/3 layer3 lldp enable yes
+set network interface ethernet ethernet1/3 comment "DB:DB1"
+set network virtual-router default interface ethernet1/3
+set zone DB network layer3 ethernet1/3
+set import network interface ethernet1/3
+set network virtual-router default protocol bgp router-id 10.0.0.22
+set network virtual-router default protocol bgp local-as 65002
+set network virtual-router default protocol bgp install-route yes
+set network virtual-router default protocol bgp reject-default-route no
+set network virtual-router default protocol bgp allow-redist-default-route no
+set network virtual-router default protocol bgp peer-group CORE type ebgp import-nexthop original
+set network virtual-router default protocol bgp peer-group CORE type ebgp export-nexthop resolve
+set network virtual-router default protocol bgp peer-group CORE peer CORE1 peer-as 65010
+set network virtual-router default protocol bgp peer-group CORE peer CORE1 local-address interface ethernet1/1
+set network virtual-router default protocol bgp peer-group CORE peer CORE1 local-address ip 10.255.2.2/30
+set network virtual-router default protocol bgp peer-group CORE peer CORE1 peer-address ip 10.255.2.1
+set network virtual-router default protocol bgp peer-group CORE peer CORE1 enable yes
+set network virtual-router default protocol bgp peer-group CORE enable yes
+set network virtual-router default protocol redist-profile RP-APP priority 1
+set network virtual-router default protocol redist-profile RP-APP filter type connect
+set network virtual-router default protocol redist-profile RP-APP filter destination 10.20.20.0/24
+set network virtual-router default protocol redist-profile RP-APP action redist
+set network virtual-router default protocol bgp redist-rules RP-APP address-family-identifier ipv4
+set network virtual-router default protocol bgp redist-rules RP-APP enable yes
+set network virtual-router default protocol bgp redist-rules RP-APP set-origin incomplete
+set network virtual-router default protocol redist-profile RP-DB priority 2
+set network virtual-router default protocol redist-profile RP-DB filter type connect
+set network virtual-router default protocol redist-profile RP-DB filter destination 10.30.30.0/24
+set network virtual-router default protocol redist-profile RP-DB action redist
+set network virtual-router default protocol bgp redist-rules RP-DB address-family-identifier ipv4
+set network virtual-router default protocol bgp redist-rules RP-DB enable yes
+set network virtual-router default protocol bgp redist-rules RP-DB set-origin incomplete
+set network virtual-router default protocol bgp enable yes
+set address H-APP1 ip-netmask 10.20.20.10/32
+set address H-APP1 description "app server (nginx :8080)"
+set address VIP-APP ip-netmask 10.20.20.100/32
+set address VIP-APP description "app VIP tcp/443 -> 10.20.20.10:8080"
+set address H-DB1 ip-netmask 10.30.30.10/32
+set address H-DB1 description "database (listens tcp/5432)"
+set address NET-HQ-USERS ip-netmask 10.10.10.0/24
+set address NET-BR-NAT ip-netmask 100.64.10.0/24
+set address H-DMZ-WEB ip-netmask 172.16.50.10/32
+set address-group APP-CLIENTS static [ NET-HQ-USERS NET-BR-NAT H-DMZ-WEB ]
+set rulebase nat rules DNAT-APP-VIP from CORE
+set rulebase nat rules DNAT-APP-VIP to APP
+set rulebase nat rules DNAT-APP-VIP source any
+set rulebase nat rules DNAT-APP-VIP destination VIP-APP
+set rulebase nat rules DNAT-APP-VIP service TCP-443
+set rulebase nat rules DNAT-APP-VIP to-interface any
+set rulebase nat rules DNAT-APP-VIP nat-type ipv4
+set rulebase nat rules DNAT-APP-VIP destination-translation translated-address H-APP1 translated-port 8080
+set rulebase nat rules DNAT-APP-VIP description "10.20.20.100:443 -> 10.20.20.10:8080"
+set rulebase security rules ALLOW-CLIENTS-TO-APP from CORE
+set rulebase security rules ALLOW-CLIENTS-TO-APP to APP
+set rulebase security rules ALLOW-CLIENTS-TO-APP source APP-CLIENTS
+set rulebase security rules ALLOW-CLIENTS-TO-APP destination [ H-APP1 VIP-APP ]
+set rulebase security rules ALLOW-CLIENTS-TO-APP source-user any
+set rulebase security rules ALLOW-CLIENTS-TO-APP category any
+set rulebase security rules ALLOW-CLIENTS-TO-APP application any
+set rulebase security rules ALLOW-CLIENTS-TO-APP service [ TCP-8080 TCP-443 ]
+set rulebase security rules ALLOW-CLIENTS-TO-APP action allow
+set rulebase security rules ALLOW-CLIENTS-TO-APP log-end yes
+set rulebase security rules ALLOW-USERS-IPERF-APP from CORE
+set rulebase security rules ALLOW-USERS-IPERF-APP to APP
+set rulebase security rules ALLOW-USERS-IPERF-APP source [ NET-HQ-USERS NET-BR-NAT ]
+set rulebase security rules ALLOW-USERS-IPERF-APP destination H-APP1
+set rulebase security rules ALLOW-USERS-IPERF-APP source-user any
+set rulebase security rules ALLOW-USERS-IPERF-APP category any
+set rulebase security rules ALLOW-USERS-IPERF-APP application any
+set rulebase security rules ALLOW-USERS-IPERF-APP service TCP-5201-IPERF
+set rulebase security rules ALLOW-USERS-IPERF-APP action allow
+set rulebase security rules ALLOW-USERS-IPERF-APP log-end yes
+set rulebase security rules ALLOW-USERS-IPERF-APP description "iperf3 load tests from HQ and branch users to APP1"
+set rulebase security rules ALLOW-HQ-PING-APP from CORE
+set rulebase security rules ALLOW-HQ-PING-APP to APP
+set rulebase security rules ALLOW-HQ-PING-APP source NET-HQ-USERS
+set rulebase security rules ALLOW-HQ-PING-APP destination H-APP1
+set rulebase security rules ALLOW-HQ-PING-APP source-user any
+set rulebase security rules ALLOW-HQ-PING-APP category any
+set rulebase security rules ALLOW-HQ-PING-APP application ping
+set rulebase security rules ALLOW-HQ-PING-APP service application-default
+set rulebase security rules ALLOW-HQ-PING-APP action allow
+set rulebase security rules ALLOW-HQ-PING-APP log-end yes
+set rulebase security rules ALLOW-APP-TO-DB from APP
+set rulebase security rules ALLOW-APP-TO-DB to DB
+set rulebase security rules ALLOW-APP-TO-DB source H-APP1
+set rulebase security rules ALLOW-APP-TO-DB destination H-DB1
+set rulebase security rules ALLOW-APP-TO-DB source-user any
+set rulebase security rules ALLOW-APP-TO-DB category any
+set rulebase security rules ALLOW-APP-TO-DB application any
+set rulebase security rules ALLOW-APP-TO-DB service TCP-5432
+set rulebase security rules ALLOW-APP-TO-DB action allow
+set rulebase security rules ALLOW-APP-TO-DB log-end yes
+set rulebase security rules DENY-CORE-TO-DB from CORE
+set rulebase security rules DENY-CORE-TO-DB to DB
+set rulebase security rules DENY-CORE-TO-DB source any
+set rulebase security rules DENY-CORE-TO-DB destination any
+set rulebase security rules DENY-CORE-TO-DB source-user any
+set rulebase security rules DENY-CORE-TO-DB category any
+set rulebase security rules DENY-CORE-TO-DB application any
+set rulebase security rules DENY-CORE-TO-DB service any
+set rulebase security rules DENY-CORE-TO-DB action deny
+set rulebase security rules DENY-CORE-TO-DB log-end yes
+set rulebase security rules DENY-CORE-TO-DB description "nobody outside the DC reaches the DB"
+set rulebase security rules ALLOW-APP-OUT-HTTP from APP
+set rulebase security rules ALLOW-APP-OUT-HTTP to CORE
+set rulebase security rules ALLOW-APP-OUT-HTTP source H-APP1
+set rulebase security rules ALLOW-APP-OUT-HTTP destination any
+set rulebase security rules ALLOW-APP-OUT-HTTP source-user any
+set rulebase security rules ALLOW-APP-OUT-HTTP category any
+set rulebase security rules ALLOW-APP-OUT-HTTP application any
+set rulebase security rules ALLOW-APP-OUT-HTTP service TCP-80
+set rulebase security rules ALLOW-APP-OUT-HTTP action allow
+set rulebase security rules ALLOW-APP-OUT-HTTP log-end yes
+set rulebase security rules ALLOW-APP-OUT-HTTP description "app server: http to internet and branch"
+set rulebase security rules ALLOW-FW-CONTROL from [ CORE APP DB ]
+set rulebase security rules ALLOW-FW-CONTROL to [ CORE APP DB ]
+set rulebase security rules ALLOW-FW-CONTROL source any
+set rulebase security rules ALLOW-FW-CONTROL destination any
+set rulebase security rules ALLOW-FW-CONTROL source-user any
+set rulebase security rules ALLOW-FW-CONTROL category any
+set rulebase security rules ALLOW-FW-CONTROL application [ bgp ping ]
+set rulebase security rules ALLOW-FW-CONTROL service application-default
+set rulebase security rules ALLOW-FW-CONTROL action allow
+set rulebase security rules ALLOW-FW-CONTROL rule-type intrazone
+set rulebase security rules ALLOW-FW-CONTROL description "BGP and ping to/through the firewall inside one zone"
+set rulebase security rules DENY-ALL-LOG from any
+set rulebase security rules DENY-ALL-LOG to any
+set rulebase security rules DENY-ALL-LOG source any
+set rulebase security rules DENY-ALL-LOG destination any
+set rulebase security rules DENY-ALL-LOG source-user any
+set rulebase security rules DENY-ALL-LOG category any
+set rulebase security rules DENY-ALL-LOG application any
+set rulebase security rules DENY-ALL-LOG service any
+set rulebase security rules DENY-ALL-LOG action deny
+set rulebase security rules DENY-ALL-LOG log-end yes

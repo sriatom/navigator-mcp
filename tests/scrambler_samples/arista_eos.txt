@@ -1,0 +1,60 @@
+dal-leaf-01#show running-config
+! Command: show running-config
+! device: dal-leaf-01 (DCS-7050SX3-48YC12, EOS-4.32.1F)
+!
+! boot system flash:/EOS-4.32.1F.swi
+!
+daemon TerminAttr
+   exec /usr/bin/TerminAttr -cvaddr=apiserver.arista.io:443 -cvauth=token-secure,/tmp/cv-onboarding-token -cvvrf=MGMT -taillogs
+   no shutdown
+!
+hostname dal-leaf-01
+dns domain dc.globex.com
+ip name-server vrf MGMT 10.20.1.53
+!
+spanning-tree mode mstp
+!
+aaa group server tacacs+ GLOBEX-TAC
+   server 10.20.1.30 vrf MGMT
+!
+tacacs-server key 7 070C285F4D06485744
+tacacs-server host 10.20.1.30 vrf MGMT key 7 0207165218120E
+!
+enable password sha512 $6$tIRV7Gn6eV5D2rbn$0cHJ8xq7Rw4N9uY5p2mQZvT3sLkJhGfDsA1QwErTyUiOpAsDfGhJkLzXcVbNm1234567890abcdefgh/
+username admin privilege 15 role network-admin secret sha512 $6$KmNoPqRsTuVw$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./abcdefghijklmnop
+username rpatel privilege 15 role network-admin secret sha512 $6$ZzYyXxWwVv$0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./0123456789abcd
+!
+snmp-server location Dallas DC2 Hall B Cage 7
+snmp-server community Gl0bexEOSro ro
+snmp-server host 10.20.1.20 vrf MGMT version 2c Gl0bexEOStrap
+!
+vlan 300
+   name TRADING-FLOOR
+!
+vrf instance MGMT
+!
+interface Ethernet49/1
+   description P2P to dal-spine-01 Et1/1
+   no switchport
+   ip address 10.20.0.1/31
+!
+interface Management1
+   vrf MGMT
+   ip address 10.20.255.31/24
+!
+router bgp 65020
+   router-id 10.20.0.1
+   neighbor 10.20.0.0 remote-as 65000
+   neighbor 10.20.0.0 password 7 Vc1ZQf8YbJ7mU0nN3pQk2g==
+!
+banner login
+Globex Corporation - Dallas DC2
+Authorized users only - contact rpatel@globex.com
+EOF
+!
+end
+dal-leaf-01#show lldp neighbors detail | include System Name
+  System Name: "dal-spine-01.dc.globex.com"
+dal-leaf-01#show interfaces Ethernet1 | include address
+  Hardware is Ethernet, address is 7483.ef12.3456 (bia 7483.ef12.3456)
+Oct 11 10:20:01 dal-leaf-01 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet49/1 (P2P to dal-spine-01 Et1/1), changed state to down

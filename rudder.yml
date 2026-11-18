@@ -1,0 +1,54 @@
+# RUDDER settings. Paths and switches only; no secrets here.
+ATLAS_SOCKET: ~/.atlas/link.sock                 # ATLAS link (layer 1); start it with: atlas-link serve
+TOKEN_FILE: ~/.config/rudder/atlas-link.token    # create with: atlas-link token RUDDER
+CONSUMER: NAVI                                   # who this instance serves; env RUDDER_CONSUMER overrides
+RECORDS_PATH: ~/.rudder/records                  # every command output, one file each (mode 600)
+EAPI_VERIFY_TLS: false                           # lab switches use self-signed certificates
+SSH_STRICT: false                                # true = refuse unknown SSH host keys
+# KNOWN_HOSTS: ~/.ssh/known_hosts_network
+TIMEOUT: 30
+MAX_WORKERS: 16
+MAX_INLINE_CHARS: 60000                          # output returned to the model; full output is on disk
+
+# Delegated adapters (P5): MCP servers RUDDER starts itself. Install: scripts/install_delegated.sh
+DELEGATED:
+  HOME: ~/.rudder/delegated                      # src/ (server sources), pyATS_MCP, one venv per server
+  # PYATS:                                       # optional; built-in defaults (decision #121):
+  #   TIMEOUT: 90                                #   seconds per command, login included
+  #   CONN_CACHE_TTL: 600                        #   one login per read run (0 = log in per command)
+  #   CONNECTION_ARGS: {}                        #   added to {init_config_commands: []} (a read never configures)
+  #   CONNECTION_ARGS_BY_OS: {iosxe: {}}         #   added to iosxe {operating_mode: true} (no cEdge mode probe)
+  # SERVERS:                                     # override a server's command if installed elsewhere
+  #   multivendor: {COMMAND: [/path/python, -u, /path/server.py], CWD: /path}
+
+# Changes (P4)
+STATE_PATH: ~/.rudder                            # tickets, device locks, audit.log
+COMMIT_TIMER: "00:05:00"                         # the switch rolls a change back by itself if not confirmed
+ALLOW_PRODUCTION: false                          # PRODUCTION devices are refused
+# DENY_LINES: ['^\s*router bgp']                 # extra lines to refuse (regex), on top of the built-in list
+APPROVAL:
+  CHANNEL: hermes                                # /pushok through the Hermes gateway (push-approve plugin)
+  HERMES_BIN: ~/.local/bin/hermes
+  APPROVAL_DIR: ~/.hermes/push-approvals         # shared with nv-push and the push-approve plugin
+  PROFILES: {NAVI: navi}                         # consumer -> Hermes profile whose Telegram gets the request
+  TTL_MIN: 30                                    # a ticket must be approved and applied within this time
+  REPLY_PROFILES: []                             # Hermes profiles that may post results back in the chat a
+                                                 # change came from (ticket reply_to, set by the host); [] = off
+
+# Change validation (decision #158; rudder_devices/validation.py). Set it with navigator-setup, which writes
+# rudder.local.yml after the validator answered a test snapshot. Off unless set.
+# VALIDATION:
+#   MODE: batfish                                # none | batfish | netclaw | command
+#   HOST: 127.0.0.1                              # local or private only (docker run -d -p 127.0.0.1:9996:9996 batfish/allinone)
+#   ON_UNREACHABLE: block                        # block | warn when the validator is down
+#   POST_PUSH: true                              # check the live config after the commit; a fail rolls back
+
+# Scheduled changes: change_propose(at=...) / change_schedule. Applied by: rudder-scheduler run
+LAB_INVENTORIES: [EVPN_LAB, PALAB1]        # which inventories are labs (used by LAB_ANY_SHOW)
+LAB_ANY_SHOW: false                              # true = in a lab inventory any plain "show ..." command may run
+SCHEDULE:
+  TIMEZONE: America/New_York                     # for times given without a zone ("02:00", "EST" = this)
+  NOTICE_SEC: 30                                 # notice before the start, with a /pushno code to stop it
+  LATE_MIN: 10                                   # scheduler more than this late (host down) = not applied
+  MAX_DAYS: 7                                    # how far ahead a change may be scheduled
+  POLL_SEC: 5                                    # how often the scheduler looks at the tickets

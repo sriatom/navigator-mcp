@@ -1,0 +1,4 @@
+name: navigator-reply
+version: 1.0.0
+description: "Change results back in the thread; LOCKED projects switch the thread to the local model; a project card on create."
+author: "NAVIGATOR"

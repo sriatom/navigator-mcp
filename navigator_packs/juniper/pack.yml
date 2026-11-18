@@ -1,0 +1,29 @@
+# Juniper Junos (MX, EX, QFX, SRX): vendor pack. Platforms moved from platforms_overlay.yml.
+# methods.<name>.available: false = the delegated MCP server is not installed / not wired yet.
+pack: juniper
+vendor: JUNIPER
+description: Juniper Junos (MX, EX, QFX, SRX)
+platforms:
+  JUNOS:
+    vendor: JUNIPER
+    aliases:
+    - JUNIPER_JUNOS
+    netmiko: juniper_junos
+    napalm: junos
+    pyats: junos
+    ansible: junipernetworks.junos.junos
+    conn:
+    - NETCONF
+    - SSH
+    reads: delegated:junos
+    writes: delegated:junos
+    validators:
+    - batfish
+    - suzieq
+methods:
+  junos:
+    adapter: delegated:junos
+    conn: NETCONF
+    port: 830
+    available: false
+    note: 'a Junos MCP server: not installed / not wired yet'

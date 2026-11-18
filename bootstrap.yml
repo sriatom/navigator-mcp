@@ -1,0 +1,24 @@
+# ATLAS paths. Paths and names only; no secrets here.
+DATA_PATH: /data/private/navigator   # PRIVATE: inventories + CREDENTIALS.yml, read by the server only
+CREDENTIAL_FILE: CREDENTIALS.yml          # under DATA_PATH
+STATE_PATH: ~/.atlas                      # inventory versions, one-time links
+MODE: OPEN                                # OPEN or LOCKED; env ATLAS_MODE overrides (one instance per mode)
+
+# Credential encryption key: outside DATA_PATH, the repo and OneDrive; mode 600.
+# Created only by `atlas-vault init` (or the first `encrypt`) when no key exists.
+KEY_FILE: ~/.config/atlas/vault.key
+# KEY_FILE_2: /path/to/second/part        # optional split key: key = part1 XOR part2
+
+# CATALOG_PATH: defaults to atlas_inventory/catalog (PLATFORMS.yml, COMMANDS.yml; not secret)
+
+# Server-to-server socket for RUDDER (layer 2). Start: atlas-link serve. Token: atlas-link token RUDDER
+LINK:
+  SOCKET: ~/.atlas/link.sock
+  CLIENTS:
+    RUDDER: {TOKEN_FILE: ~/.config/rudder/atlas-link.token, CONSUMERS: [NAVI]}
+
+CONSUMER: NAVI                            # who this instance serves; env ATLAS_CONSUMER overrides
+# No CONSUMERS section = every inventory and tag is allowed.
+# CONSUMERS:
+#   NAVI:    {INVENTORIES: ["*"], CREDENTIALS: ["*"]}
+#   LAB_BOT: {INVENTORIES: [INVENTORY_PALAB1], CREDENTIALS: [PALAB1_PANOS, PALAB1_EOS]}

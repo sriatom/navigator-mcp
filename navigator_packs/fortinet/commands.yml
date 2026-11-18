@@ -1,0 +1,6 @@
+# FortiOS: the fortinet MCP server's read tools by category (moved from atlas_inventory/catalog/COMMANDS.yml).
+FORTIOS:
+  system: [fgt_system_status, fgt_list_interfaces]
+  routing: [fgt_get_routes]
+  vpn: [fgt_vpn_tunnels]
+  policy: [fgt_get_policies]

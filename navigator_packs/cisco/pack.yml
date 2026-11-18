@@ -1,0 +1,122 @@
+# Cisco vendor pack. Everything NAVIGATOR needs for Cisco IOS / IOS-XE / NX-OS / IOS-XR / ASA / FTD / SD-WAN.
+pack: cisco
+vendor: CISCO
+description: Cisco routers, switches, firewalls and SD-WAN (Catalyst SD-WAN Manager / vManage)
+
+# ATLAS: the catalogue entries (moved from platforms_overlay.yml)
+platforms:
+  IOS:
+    vendor: CISCO
+    aliases: [CISCO_IOS]
+    netmiko: cisco_ios
+    napalm: ios
+    pyats: ios
+    ansible: cisco.ios.ios
+    conn: [SSH]
+    reads: delegated:pyats
+    writes: native:netmiko
+    validators: [batfish, suzieq]
+  IOSXE:
+    vendor: CISCO
+    aliases: [CISCO_IOSXE, CISCO_XE, IOS_XE]
+    netmiko: cisco_xe
+    napalm: ios
+    pyats: iosxe
+    ansible: cisco.ios.ios
+    conn: [SSH, NETCONF, RESTCONF]       # NETCONF / RESTCONF: not built yet
+    reads: delegated:pyats
+    writes: native:netmiko
+    validators: [batfish, suzieq]
+  NXOS:
+    vendor: CISCO
+    aliases: [CISCO_NXOS, NX_OS]
+    netmiko: cisco_nxos
+    napalm: nxos_ssh
+    pyats: nxos
+    ansible: cisco.nxos.nxos
+    conn: [SSH, NXAPI]                   # NX-API: not built yet
+    reads: delegated:pyats
+    writes: native:netmiko
+    validators: [batfish, suzieq]
+  IOSXR:
+    vendor: CISCO
+    aliases: [CISCO_XR, CISCO_IOSXR, IOS_XR]
+    netmiko: cisco_xr
+    napalm: iosxr
+    pyats: iosxr
+    ansible: cisco.iosxr.iosxr
+    conn: [SSH, NETCONF]
+    reads: delegated:pyats
+    writes: native:netmiko               # refused for now: IOS-XR needs commit confirmed
+    validators: [batfish, suzieq]
+  ASA:
+    vendor: CISCO
+    aliases: [CISCO_ASA]
+    netmiko: cisco_asa
+    pyats: asa
+    ansible: cisco.asa.asa
+    conn: [SSH]
+    reads: delegated:pyats
+    writes: native:netmiko
+    validators: [batfish]
+  FTD:
+    vendor: CISCO
+    aliases: [CISCO_FTD]
+    netmiko: cisco_ftd
+    conn: [API]
+    reads: delegated:fmc                 # FMC server not installed yet
+    writes: delegated:fmc
+  VIPTELA:
+    vendor: CISCO
+    aliases: [SDWAN, CISCO_SDWAN, VEDGE, CISCO_VIPTELA]
+    netmiko: cisco_viptela               # SD-WAN Manager over SSH (2026-11-15)
+    conn: [VMANAGE_API, SSH]
+    reads: native:vmanage                # a CONN_TYPE SSH record (or via=ssh) reads over SSH instead
+    writes: none                         # later, through vManage templates
+
+# RUDDER: the connection methods (built-in = this pack's code; delegated = an MCP server RUDDER calls)
+methods:
+  pyats:
+    adapter: delegated:pyats             # Genie-parsed JSON where a parser exists; text otherwise
+    conn: SSH
+    port: 22
+  ssh:
+    adapter: NetmikoText                 # rudder_devices.adapters: plain text over SSH (via=ssh)
+    conn: SSH
+    port: 22
+  netmiko-writer:
+    writer: CiscoCliWriter               # cli.py: archive / checkpoint, lines, verify, rollback
+    conn: SSH
+    port: 22
+  vmanage-api:
+    adapter: Vmanage                     # vmanage.py: SD-WAN Manager REST, GET only, per-device by SYSTEM_IP
+    conn: VMANAGE_API
+    port: 443
+  vmanage-ssh:
+    adapter: NetmikoText                 # the Manager's own CLI over SSH (netmiko cisco_viptela), text
+    conn: SSH
+    port: 22
+
+# RUDDER: defaults for the delegated pyATS server (read by rudder_devices/delegated.py)
+delegated:
+  pyats:
+    default_args: {init_config_commands: []}        # a read never enters config mode
+    default_args_by_os:
+      iosxe: {operating_mode: true}                 # no 'pnpa service discovery stop', one login (~3 s)
+
+# ATLAS: the fields the inventory interview asks for a Cisco record (besides name, address, credential)
+fields:
+  CONN_TYPE: {ask: "SSH (routers, switches, firewalls, SD-WAN edges) or VMANAGE_API (SD-WAN Manager)?",
+              values: [SSH, VMANAGE_API], default: SSH}
+  PORT: {ask: "port", default_by_conn: {SSH: 22, VMANAGE_API: 443}}
+  SYSTEM_IP: {ask: "SD-WAN system-ip (SD-WAN Manager and edges only)", optional: true}
+  ADAPTER: {ask: "default read method: pyats or ssh (empty = the platform default, pyats)", optional: true}
+
+template_examples:
+  pyats: CORE-RTR1
+  ssh: CORE-RTR1
+  netmiko-writer: CORE-RTR1
+  vmanage-api: SDWAN-MGR1
+  vmanage-ssh: SDWAN-MGR1-SSH
+
+validators: [batfish, suzieq]
