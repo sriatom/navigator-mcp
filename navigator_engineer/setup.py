@@ -1080,6 +1080,9 @@ def main(argv=None) -> int:
     if argv and argv[0] in ("tls", "user", "http"):
         from navigator_gate import cli as gate_cli
         return gate_cli.main(argv)
+    if argv and argv[0] == "connect":
+        from . import connect
+        return connect.main(argv[1:])
     if argv and argv[0] in ("recovery", "backup", "restore"):
         from . import backup
         return backup.main(argv)
