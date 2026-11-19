@@ -2,6 +2,10 @@
 
 # NAVIGATOR
 
+[![PyPI](https://img.shields.io/pypi/v/navigator-mcp)](https://pypi.org/project/navigator-mcp/)
+[![Python](https://img.shields.io/pypi/pyversions/navigator-mcp)](https://pypi.org/project/navigator-mcp/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 An independent MCP server for network-automation agents. It works with any MCP host (Hermes, OpenClaw, Claude,
 or your own agent): the agent gets one server, NAVIGATOR, that is its front door to inventories, credentials and
 devices. Inside it run three layers, and NAVIGATOR checks every call (project, mode, inventory, allowlist) before
@@ -232,8 +236,18 @@ Add `~/.config/rudder/` and `~/.rudder/` to the host's deny rules as well.
 
 ## Install
 
+From PyPI (Python 3.11+, Linux):
+
 ```bash
-git clone https://github.com/sriatom/navigator-mcp.git ~/navigator    # package: navigator-mcp
+python3 -m venv ~/navigator/.venv
+~/navigator/.venv/bin/pip install navigator-mcp       # or "navigator-mcp[batfish]"
+```
+
+The full steps, with the service files and the Hermes plugins: [Install](https://navigator.atomidea.com/INTEGRATION.html).
+From source:
+
+```bash
+git clone https://github.com/sriatom/navigator-mcp.git ~/navigator
 cd ~/navigator
 python3 -m venv .venv
 .venv/bin/pip install setuptools wheel

@@ -16,13 +16,34 @@ In the chat: *"failed changes this week"*, *"what is scheduled?"*, *"local model
 
 ## Upgrade
 
+=== "pip"
+
+    ```bash
+    ~/navigator/.venv/bin/pip install --upgrade navigator-mcp
+    ```
+
+    Then get the service files and Hermes plugins of the new version:
+
+    ```bash
+    V=$(~/navigator/.venv/bin/pip show navigator-mcp | sed -n 's/^Version: //p')
+    curl -fsSL "https://github.com/sriatom/navigator-mcp/archive/refs/tags/v$V.tar.gz" \
+      | tar -xz -C ~/navigator --strip-components=1 --wildcards '*/scripts/*.service' '*/integrations/*'
+    ```
+
+=== "From source (git)"
+
+    ```bash
+    cd ~/navigator
+    git pull
+    .venv/bin/pip install --no-build-isolation -e ".[test]"
+    .venv/bin/python -m pytest -q
+    ```
+
 ```bash
-cd ~/navigator
-git pull
-.venv/bin/pip install --no-build-isolation -e ".[test]"
-.venv/bin/python -m pytest -q
 systemctl --user restart atlas-link rudder-scheduler
 ```
+
+If you copied a Hermes plugin into a profile, copy it again from `~/navigator/integrations/hermes/`.
 
 Then restart the agent host so it loads the new tools (Hermes: `systemctl --user restart hermes-gateway`;
 Claude Code and Cursor: reconnect the MCP server).

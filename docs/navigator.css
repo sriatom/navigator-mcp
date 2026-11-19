@@ -149,3 +149,8 @@
 .md-typeset .nv-vendors span { padding: .35em .9em; border-radius: 99px; border: 1px solid var(--nv-border); background: var(--md-default-bg-color); font-size: .72rem; font-weight: 600; }
 .md-typeset .nv-more { display: table; margin: 1rem auto 0; font-weight: 600; }
 .md-typeset .nv-more::after { content: " →"; }
+
+/* pip line under the hero buttons */
+.md-typeset .nv-pip { margin: .4rem 0 0; font-size: .72rem; color: var(--nv-muted); }
+.md-typeset .nv-pip code { font-size: .72rem; padding: .15em .5em; border: 1px solid var(--nv-border); }
+.md-typeset .nv-pip a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

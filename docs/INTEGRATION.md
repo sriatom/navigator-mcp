@@ -8,24 +8,52 @@ copied as it is. Lines that start with `#` are notes.
 | You need | Why |
 |---|---|
 | A Linux host or VM (Ubuntu 22.04+ or similar) that reaches your devices' management addresses | NAVIGATOR logs in to the devices and keeps the credential store ([Where it runs](HOSTING.md)) |
-| Python 3.11 or newer, `git` | NAVIGATOR is a Python package |
+| Python 3.11 or newer | NAVIGATOR is a Python package, [`navigator-mcp` on PyPI](https://pypi.org/project/navigator-mcp/) |
 | An approval channel: a private Slack channel with its own Slack app, or a Telegram bot | A person approves changes there, never in the chat ([Approvals](APPROVALS.md)) |
 | One agent host: Hermes, NetClaw, OpenClaw, Claude Code, Cursor or any MCP client | The AI agent you talk to |
 
 ## 1. Install NAVIGATOR on the host
 
-The code is on GitHub: [sriatom/navigator-mcp](https://github.com/sriatom/navigator-mcp) (Apache-2.0).
-The Python package is `navigator-mcp`; the commands keep their names (`navigator-setup`, `navigator-mcp`, …).
+NAVIGATOR is the Python package [`navigator-mcp`](https://pypi.org/project/navigator-mcp/) (Apache-2.0,
+source on GitHub: [sriatom/navigator-mcp](https://github.com/sriatom/navigator-mcp)). Install it with pip, or
+from source if you want to change the code.
 
-```bash
-sudo apt-get install -y python3-venv git
-git clone https://github.com/sriatom/navigator-mcp.git ~/navigator
-cd ~/navigator
-python3 -m venv .venv
-.venv/bin/pip install --upgrade pip setuptools wheel
-.venv/bin/pip install --no-build-isolation -e ".[test]"
-.venv/bin/python -m pytest -q          # runs offline: no devices, no network
-```
+=== "pip (recommended)"
+
+    ```bash
+    sudo apt-get install -y python3-venv curl
+    python3 -m venv ~/navigator/.venv
+    ~/navigator/.venv/bin/pip install --upgrade pip
+    ~/navigator/.venv/bin/pip install navigator-mcp      # with change validation: "navigator-mcp[batfish]"
+    ```
+
+    The package holds the servers and the commands: `navigator-mcp`, `navigator-setup`, `atlas-mcp`,
+    `rudder-mcp`, `atlas-link`, `atlas-vault`, `atlas-interview`, `rudder-approve`, `rudder-scheduler`,
+    `navigator-skills`. The service files and the Hermes plugins are in the repository. Get the ones for the
+    version you installed, into `~/navigator`:
+
+    ```bash
+    V=$(~/navigator/.venv/bin/pip show navigator-mcp | sed -n 's/^Version: //p')
+    curl -fsSL "https://github.com/sriatom/navigator-mcp/archive/refs/tags/v$V.tar.gz" \
+      | tar -xz -C ~/navigator --strip-components=1 --wildcards '*/scripts/*.service' '*/integrations/*'
+    ```
+
+    The venv sits in `~/navigator/.venv` on purpose: every path on these pages (`~/navigator/.venv/bin/…`,
+    `~/navigator/scripts/…`, `~/navigator/integrations/…`) is then the same for both ways.
+
+=== "From source (git)"
+
+    For contributors, or to run the tests:
+
+    ```bash
+    sudo apt-get install -y python3-venv git
+    git clone https://github.com/sriatom/navigator-mcp.git ~/navigator
+    cd ~/navigator
+    python3 -m venv .venv
+    .venv/bin/pip install --upgrade pip setuptools wheel
+    .venv/bin/pip install --no-build-isolation -e ".[test]"
+    .venv/bin/python -m pytest -q          # runs offline: no devices, no network
+    ```
 
 Put the commands on your path. A venv install puts `navigator-setup` and the other commands in
 `~/navigator/.venv/bin`, so either add that folder to your PATH:
@@ -61,6 +89,19 @@ sudo loginctl enable-linger "$USER"   # keep the services running when you log o
 ```
 
 `atlas-link` holds the credential key. `rudder-scheduler` applies approved changes and serves the change pages.
+
+**Where the settings are read from.** Each layer looks in this order and takes the first it finds:
+
+| | ATLAS | RUDDER | NAVIGATOR |
+|---|---|---|---|
+| 1. environment variable (the file must exist) | `ATLAS_BOOTSTRAP` | `RUDDER_BOOTSTRAP` | `NAVIGATOR_BOOTSTRAP` |
+| 2. the file at the repository root (source install only) | `bootstrap.yml` | `rudder.yml` | `navigator.yml` |
+| 3. your config folder | `~/.config/atlas/bootstrap.yml` | `~/.config/rudder/rudder.yml` | `~/.config/navigator/navigator.yml` |
+| 4. built-in defaults | data `~/.atlas/data`, state `~/.atlas`, key `~/.config/atlas/vault.key` | | `PROJECT_ROOT` `~/workspace` |
+
+`~/.config/rudder/rudder.local.yml` is merged on top of RUDDER's settings; `navigator-setup` writes the
+host settings there and in `navigator.yml`. A pip install with no settings files at all still starts: the
+servers answer, for example `inventory action=platforms`.
 Details of every question: [Day 0](DAY0.md). Then add your devices: [Day 1](DAY1.md).
 
 ## 3. Connect your agent host

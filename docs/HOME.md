@@ -22,6 +22,8 @@ credentials and your devices. It reads with care, and it changes nothing until a
 [Try a lab](LABS.md){ .md-button }
 </div>
 
+<p class="nv-pip"><code>pip install navigator-mcp</code> · <a href="https://pypi.org/project/navigator-mcp/">PyPI</a> · <a href="https://github.com/sriatom/navigator-mcp">GitHub</a></p>
+
 <p class="nv-works">Works with <b>Hermes</b> · <b>NetClaw</b> · <b>OpenClaw</b> · <b>Claude Code</b> · <b>Cursor</b> · any MCP client</p>
 
 </div>
