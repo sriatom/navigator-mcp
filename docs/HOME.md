@@ -22,7 +22,7 @@ credentials and your devices. It reads with care, and it changes nothing until a
 [Try a lab](LABS.md){ .md-button }
 </div>
 
-<p class="nv-pip"><code>pip install navigator-mcp</code> · <a href="https://pypi.org/project/navigator-mcp/">PyPI</a> · <a href="https://github.com/sriatom/navigator-mcp">GitHub</a></p>
+<p class="nv-pip">One command: <code>curl -fsSL https://navigator.atomidea.com/install.sh | bash</code> · or <code>pip install navigator-mcp</code> · <a href="https://pypi.org/project/navigator-mcp/">PyPI</a> · <a href="https://github.com/sriatom/navigator-mcp">GitHub</a></p>
 
 <p class="nv-works">Works with <b>Hermes</b> · <b>NetClaw</b> · <b>OpenClaw</b> · <b>Claude Code</b> · <b>Cursor</b> · any MCP client</p>
 
@@ -153,7 +153,7 @@ and change rules. Every role learns it at once.</p>
 <div class="nv-card nv-card--link" markdown>
 :material-download:{ .nv-icon }
 ### 1 · Install
-One Linux host, one page of copy and paste, then connect your agent.
+One Linux host and one command (`install.sh --hermes` or `--cursor`), or the same steps one by one.
 
 [Install guide](INTEGRATION.md)
 </div>

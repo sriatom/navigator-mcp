@@ -1,7 +1,105 @@
 # Install
 
 One page: install NAVIGATOR on a Linux host, set it up, then connect your agent host. Every block can be
-copied as it is. Lines that start with `#` are notes.
+copied as it is. Lines that start with `#` are notes. In a hurry? The
+[quick install](#quick-install-one-command) does it in one command.
+
+## Quick install: one command
+
+On the Linux host that reaches your devices, as your own user (no sudo). Pick what you connect:
+
+=== "Hermes + NAVIGATOR"
+
+    ```bash
+    curl -fsSL https://navigator.atomidea.com/install.sh | bash -s -- --hermes --approvals approvals
+    ```
+
+    This makes the chat bot profile `navigator` (another name: `--hermes mybot`) and the approval bot
+    profile `approvals`. Leave out `--approvals approvals` if you set up the approval bot later.
+    Three things stay by hand. They are in [Hermes, step by step](#hermes-step-by-step):
+
+    - the chat model: `hermes -p navigator model` (step 1);
+    - the Slack app or Telegram bot of each profile, with its tokens in the profile's `.env` (steps 3 and 4);
+    - the approval bot's own app and channel, then `navigator-setup set APPROVAL.BOT approvals …` (step 6).
+
+=== "Cursor + NAVIGATOR"
+
+    ```bash
+    curl -fsSL https://navigator.atomidea.com/install.sh | bash -s -- --cursor
+    ```
+
+    It prints an **Add to Cursor** link (`cursor://anysphere.cursor-deeplink/mcp/install?…`) and the
+    `mcp.json` entry. Open the link on your PC: Cursor reaches the host over SSH. If your PC knows the host
+    by another name, give it: `--cursor user@host`.
+
+=== "NAVIGATOR only"
+
+    ```bash
+    curl -fsSL https://navigator.atomidea.com/install.sh | bash
+    ```
+
+    Connect an agent host later with `navigator-setup connect` (below).
+
+=== "Claude Code"
+
+    ```bash
+    curl -fsSL https://navigator.atomidea.com/install.sh | bash -s -- --claude
+    ```
+
+    It prints the `claude mcp add` lines to run.
+
+What the script does, in order. Every step is also on this page, so you can do it by hand instead:
+
+1. checks for Python 3.11+, the venv module and curl, and prints the `apt-get` line if one is missing;
+2. makes `~/navigator/.venv` and installs [`navigator-mcp`](https://pypi.org/project/navigator-mcp/) from PyPI
+   (section 1);
+3. fetches that version's service files and Hermes plugins from its GitHub tag;
+4. runs `navigator-setup`, the setup interview, if there is a terminal (section 2);
+5. installs and starts the `atlas-link` and `rudder-scheduler` user services, and prints the
+   `sudo loginctl enable-linger` line for you to run;
+6. runs `navigator-setup connect` for the host you chose (section 3).
+
+It needs no sudo. Running it again is safe: it upgrades in place and skips what is already done.
+Right after a release, PyPI's download index can lag a few minutes. If the script reports an older version, or `invalid choice: 'connect'`, wait a few minutes and run it again, or pin the version with `--version X.Y.Z`.
+To read it before you run it:
+
+```bash
+curl -fsSL https://navigator.atomidea.com/install.sh -o install.sh
+less install.sh
+bash install.sh --hermes
+```
+
+| Option | Does |
+|---|---|
+| `--hermes [PROFILE]` | connect a Hermes chat bot profile (default `navigator`) |
+| `--approvals PROFILE` | also make the approval bot profile |
+| `--cursor [user@host]` | print the Add to Cursor link and the `mcp.json` entry |
+| `--claude` | print the `claude mcp add` lines |
+| `--version X.Y.Z` | install that version instead of the latest |
+| `--batfish` | add the Batfish client for change validation |
+| `--no-setup` | skip the setup interview (run `navigator-setup` later) |
+| `--no-services` | skip the user services |
+| `--dir DIR` | install somewhere other than `~/navigator` |
+
+**Already installed?** Connect an agent host with one command:
+
+```bash
+navigator-setup connect hermes [--profile P] [--approvals A] [--no-restart]
+navigator-setup connect cursor [--ssh-host user@host] [--write]
+navigator-setup connect claude
+```
+
+What `connect hermes` does:
+
+- makes the profile with `hermes profile create` if it is missing;
+- copies the `navigator-reply` and `navigator-qc` plugins and the chat SOUL. An existing `SOUL.md` is kept,
+  and NAVIGATOR's rules go to `SOUL.navigator.md`;
+- adds `mcp_servers.navigator` and the plugins to `config.yaml`. Comments are kept and a backup is made first;
+- sets `APPROVAL.REPLY_PROFILES` and restarts the gateway.
+
+`connect cursor --write` puts the entry in `~/.cursor/mcp.json` on this host, for Cursor running here.
+
+The rest of this page is the same install, step by step.
 
 ## Before you start
 
@@ -111,6 +209,10 @@ shell access to `~/.config/atlas`, `~/.rudder` or the approval folder.
 
 === "Hermes"
 
+    One step: `navigator-setup connect hermes --approvals approvals` (or the
+    [quick install](#quick-install-one-command) with `--hermes`) does the profiles, plugins and MCP config.
+    The tokens and the model stay by hand.
+
     Hermes needs two profiles: a chat bot with NAVIGATOR as its MCP server, and a separate approval bot.
     Each one has its own Slack app or Telegram bot. Follow [Hermes, step by step](#hermes-step-by-step)
     below; it covers both profiles, the MCP config, Slack channels and Telegram.
@@ -203,6 +305,9 @@ shell access to `~/.config/atlas`, `~/.rudder` or the approval folder.
     the ticket's status.
 
 === "Cursor"
+
+    One step: `navigator-setup connect cursor` prints an **Add to Cursor** link to open on your PC (or the
+    [quick install](#quick-install-one-command) with `--cursor`). By hand:
 
     Put this in `~/.cursor/mcp.json` (every project) or `.cursor/mcp.json` (one project), then open
     *Settings → MCP*:
