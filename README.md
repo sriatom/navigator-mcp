@@ -233,6 +233,7 @@ Add `~/.config/rudder/` and `~/.rudder/` to the host's deny rules as well.
 ## Install
 
 ```bash
+git clone https://github.com/sriatom/navigator-mcp.git ~/navigator    # package: navigator-mcp
 cd ~/navigator
 python3 -m venv .venv
 .venv/bin/pip install setuptools wheel

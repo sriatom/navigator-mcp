@@ -178,15 +178,17 @@ class Projects:
                               if project_file(pdir, INVENTORY_MARK).exists() else None),
                 "ticket_id": st.get("ticket_id"),
                 "status": st.get("status", "unknown"), "phase": st.get("phase"), "ask": st.get("ask"),
-                "user_files": own[:50], "raw_files": raw[:50],
+                "user_files": own[:50], "raw_files": raw[:50], "folders": _folders(pdir),
                 "next": self._next(mode, host)}
 
     def _next(self, mode: str, host: str | None = None) -> str:
         if mode != LOCAL:
-            return "CLOUD: the host's model may read the project files."
+            return ("CLOUD: the host's model may read the project files: project action=search finds text in them "
+                "(with the config block around it), action=files lists them.")
         from .models import host_kind
         if (host or host_kind(self.s)) == "local":
-            return "LOCAL: this host runs a local model, so you may read the project files."
+            return ("LOCAL: this host runs a local model, so you may read the project files: project action=search "
+                    "finds text in them (with the config block around it), action=files lists them.")
         return ("LOCAL: only a local model may read this project's files, logs and configs, and this host's model "
                 "is a cloud model. Do not open them yourself: use local_model action=ask (the answer is written to "
                 "the project's OUT folder), or ask the user to switch the host to the local model.")
@@ -244,3 +246,11 @@ class Projects:
         project_file(pdir, MODE_FILE).write_text(mode + "\n")
         self.log(pdir, "NAVIGATOR", f"MODE {old} -> {mode}", "OK")
         return {"project": pdir.name, "mode": mode, "was": old}
+
+
+def _folders(pdir: Path) -> dict:
+    from .project_files import overview
+    try:
+        return overview(pdir)
+    except OSError:
+        return {}

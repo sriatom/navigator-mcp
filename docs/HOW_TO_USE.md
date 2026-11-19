@@ -75,8 +75,8 @@ A project follows the model: its mode is CLOUD or LOCAL, the same words as the c
 
 - **CLOUD**: cloud models may see the project's data.
 - **LOCAL**: the data stays local. Web searches and lessons must be generic, and a **cloud** chat model does
-  not see the files or device output: `local_model` lets the local model read them and writes its answer to
-  `OUT/` ([LOCAL_MODELS.md](LOCAL_MODELS.md)).
+  not see the files or device output: `local_model` lets the local model read them (every project file by
+  default) and writes its answer to `OUT/` ([LOCAL_MODELS.md](LOCAL_MODELS.md)).
 - A new project takes the model the chat runs on when you create it; say "as CLOUD" or "as LOCAL" to choose.
   A folder without a mode file counts as LOCAL. LOCAL → CLOUD needs your `/pushok`, like a change;
   CLOUD → LOCAL is immediate. Projects marked OPEN or LOCKED (the older words) read as CLOUD or LOCAL.
@@ -84,6 +84,23 @@ A project follows the model: its mode is CLOUD or LOCAL, the same words as the c
 - Pass the project in your words ("in BGP_AUDIT, …"): records and run-log lines go there.
 - Say "project status", "close BGP_AUDIT: all sessions up", or "what did we do in BGP_AUDIT?" (the run log).
 - Give the outside ticket when you create it ("… with ticket CHG0012345"): every change ticket then carries it.
+
+### Ask about a project's files
+
+A project is a folder under `PROJECT_ROOT`, not an inventory. Put configs, logs or captures in it (for
+example in `RAW/`) and ask about them in plain words:
+
+> *"Project DEMO2: which device has VLAN 3102, and what are its IP addresses?"*
+
+- `project action=files` lists the project's files and sizes.
+- `project action=search search="vlan 3102"` returns, from every file in the project, the config block
+  around each hit. For example `interface Vlan3102` with its `ip address` and `hsrp` lines. No model reads
+  the files, so it works however large they are.
+- Plain text is matched as whole words, ignoring case, and spaces may be missing: `vlan 3102` also finds
+  `Vlan3102`. Use `regex=true` for a regular expression, and `files=` to search only some folders or files.
+- **LOCAL project on a cloud chat model:** search returns only the number of matches. The blocks stay on the
+  host. `local_model action=ask` takes the same `search=`, so the local model gets just the matching blocks
+  and writes its answer to `OUT/`. Or switch the chat to `/model local`.
 
 ### The chat model: CLOUD or LOCAL
 

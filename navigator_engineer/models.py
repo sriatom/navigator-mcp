@@ -150,20 +150,14 @@ class LocalModel:
 
 
 def read_files(pdir: Path, files: list[str] | None, limit: int) -> tuple[str, list[str]]:
-    """Project files (relative to the project, default RAW/) as one text block, capped at `limit` chars."""
+    """Project files (relative to the project; default every project file but OUT/) as one text block,
+    capped at `limit` chars. A missing name lists what the project has."""
+    from . import project_files
     root = pdir.resolve()
-    picks = files or ["RAW"]
-    paths: list[Path] = []
-    for f in picks:
-        p = (root / f).resolve()
-        if root not in p.parents and p != root:
-            raise ModelError(f"{f}: outside the project folder")
-        if p.is_dir():
-            paths += sorted(x for x in p.rglob("*") if x.is_file() and not x.name.startswith("."))
-        elif p.is_file():
-            paths.append(p)
-        else:
-            raise ModelError(f"{f}: no such file or folder in the project")
+    try:
+        paths = project_files.pick(pdir, files)
+    except project_files.ProjectFilesError as e:
+        raise ModelError(str(e)) from None
     parts, used, total = [], [], 0
     for p in paths:
         try:

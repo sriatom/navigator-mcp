@@ -33,6 +33,7 @@ from . import branding
 from . import config, roles, skills_store
 from .models import LocalModel, ModelError, host_kind, read_files
 from .modes import ModeChanger
+from . import project_files as PF
 from .projects import LOCAL, ProjectError, Projects
 from .research import Research, ResearchError
 from .scrambler import Scrambler, ScrambleError
@@ -49,6 +50,10 @@ inventories, credentials and devices: never use a shell, scripts, SSH or files f
 - In a project, respect its MODE: LOCAL data never goes to a cloud model, and a LOCAL project works only on
   its own inventory. Pass project= on inventory, device, change and credential calls so records land in it.
   If your own model is a cloud model, let the local model read LOCAL files: local_model action=ask.
+- A project is a folder under the projects root (the user may say project, project folder or a projects folder); it is
+  NOT an inventory. Questions about its files (configs, logs, notes): project action=search with the text
+  (e.g. "vlan 3102") returns the matching config blocks from every file; action=files lists the files. Do
+  not read devices or ask for an inventory to answer from the project's files.
 - Speak in names (inventories, projects, devices), not file paths.
 - Roles: role action=brief gives a subagent its full brief (ANALYZER, CONFIG_GENERATOR, CONFIG_PUSHER,
   DATA_COLLECTOR, STATE_VALIDATOR, LOG_REVIEWER, DOCUMENTOR, SANITY_AGENT, SHIP_ENGINEER). Pass results through
@@ -578,8 +583,9 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
             inventory: str | None = None, status: str | None = None, phase: str | None = None,
             ask: str | None = None, summary: str | None = None, actor: str | None = None,
             step: str | None = None, result: str | None = None, ticket_id: str | None = None,
-            host_model: str | None = None):
-    """Project folders (a projects folder) for every job.
+            host_model: str | None = None, search: str | None = None, files: list[str] | None = None,
+            regex: bool = False):
+    """Project folders (a projects folder) for every job. A project is a folder, not an inventory.
     action:
       create  (mode CLOUD | LOCAL: default = the model you run on now, a project follows the model it was
               started on; OPEN / LOCKED are the older words), description (+ project = name, inventory, ticket_id = the outside ticket
@@ -589,8 +595,13 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
       show    project         list   all projects
       status  project, status active | waiting_input (with ask) | done (+ phase)
       close   project (+ summary)
-      task    project, actor (role name), step (what was done), result: a line in RUNLOG.md"""
-    a = _act(action, ("create", "show", "list", "status", "close", "task"))
+      task    project, actor (role name), step (what was done), result: a line in RUNLOG.md
+      files   project (+ files = folders to list): the project's files and sizes
+      search  project, search = the text to find, e.g. "vlan 3102" or "10.3.1.12" (+ files = folders or files,
+              default every file; regex=true for a regex). Returns, per file, the config block around each
+              match (e.g. "interface Vlan3102" with its ip address lines). Use it to answer questions about
+              the project's configs and logs: it reads every file on the host, however large."""
+    a = _act(action, ("create", "show", "list", "status", "close", "task", "files", "search"))
     P = Projects(_s())
     if a == "create":
         _need(a, description=description)
@@ -600,6 +611,8 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
     _need(a, project=project)
     if a == "show":
         return _call(P.show, project, host_kind(_s(), host_model))
+    if a in ("files", "search"):
+        return _project_files(a, project, search, files, regex, host_model)
     if a == "status":
         _need(a, status=status)
         return _call(P.status, project, status, phase, ask)
@@ -607,6 +620,29 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
         return _call(P.status, project, "done", "closed", None, "project closed" + (f": {summary}" if summary else ""))
     _need(a, actor=actor, step=step, result=result)
     return _call(P.record, project, actor, step, result)
+
+
+def _project_files(a: str, project: str, search: str | None, files: list[str] | None, regex: bool,
+                   host_model: str | None) -> dict:
+    sc = Scope(project, None, need_inventory=False, host_model=host_model)
+    if not sc.pdir:
+        raise ToolError(f"no project {project}")
+    if a == "files":
+        if sc.hidden:
+            return {"project": sc.project, "mode": sc.mode, "folders": _call(PF.overview, sc.pdir),
+                    "next": "LOCAL project and a cloud host model: file names stay in the project."}
+        return {"project": sc.project, "mode": sc.mode, **_call(PF.listing, sc.pdir, files)}
+    _need(a, search=search)
+    res = _call(PF.search, sc.pdir, search, files, regex)
+    sc.log(f"project search{' (text not logged: LOCAL)' if sc.hidden else ': ' + search[:100]}",
+           f"{res['matches']} match(es) in {len(res['files_with_matches'])} file(s)")
+    if sc.hidden:
+        return {"project": sc.project, "mode": sc.mode, "matches": res["matches"],
+                "files_with_matches": len(res["files_with_matches"]),
+                "next": ("LOCAL project and a cloud host model: the matches stay on the host. Use local_model "
+                         "action=ask with the same search= so the local model answers from them, or ask the "
+                         "user to switch this chat to the local model.")}
+    return {"project": sc.project, "mode": sc.mode, **res}
 
 
 @mcp.tool()
@@ -720,12 +756,15 @@ def research(query: str, project: str | None = None, max_results: int = 8, fetch
 # ------------------------------------------------------------------ 16. local model
 @mcp.tool()
 def local_model(action: str, project: str | None = None, task: str | None = None,
-                files: list[str] | None = None, host_model: str | None = None) -> dict:
+                files: list[str] | None = None, host_model: str | None = None,
+                search: str | None = None) -> dict:
     """The local model (Ollama or any OpenAI-compatible endpoint on this host or LAN, MODELS.LOCAL in the
     settings). Use it when a LOCAL project's files must be read and your own model is a cloud model.
     action:
       status  which model this host runs (host_model cloud / local) and whether the local model answers
-      ask     project, task (+ files: paths inside the project, default RAW). The local model reads the files
+      ask     project, task (+ files: files or folders inside the project, default every file; + search: only
+              the config blocks matching this text, as project action=search finds them: use it for large
+              configs, e.g. search="vlan 3102"). The local model reads the files
               and answers; the answer is saved to <project>/OUT/LOCAL_MODEL_<time>.md. LOCAL project with a
               cloud host: you get the file name and size only, never the text; tell the user where it is.
               CLOUD project, or a host on the local model: the text comes back too.
@@ -739,7 +778,14 @@ def local_model(action: str, project: str | None = None, task: str | None = None
     sc = Scope(project, None, need_inventory=False, host_model=host_model)
     if not sc.pdir:
         raise ToolError(f"no project {project}")
-    context, used = _call(read_files, sc.pdir, files, int(lm.cfg["MAX_INPUT_CHARS"]))
+    if search:
+        found = _call(PF.search, sc.pdir, search, files, False, 200, int(lm.cfg["MAX_INPUT_CHARS"]))
+        if not found["blocks"]:
+            raise ToolError(f"search {search!r}: no match in the project files; nothing to give the local model")
+        context = "".join(f"===== {b['file']} (line {b['line']}) =====\n{b['block']}\n" for b in found["blocks"])
+        used = sorted(found["files_with_matches"])
+    else:
+        context, used = _call(read_files, sc.pdir, files, int(lm.cfg["MAX_INPUT_CHARS"]))
     res = _call(lm.chat, task, context)
     out_dir = sc.pdir / "OUT"
     out_dir.mkdir(exist_ok=True)

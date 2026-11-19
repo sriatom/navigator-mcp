@@ -4,7 +4,7 @@ The chat agent never carries a validation result, so it cannot skip the check or
 
 VALIDATION (rudder.local.yml, set with navigator-setup; shell only, like APPROVAL):
   MODE            none (default) | batfish | netclaw
-                    batfish  a Batfish service at HOST:PORT (pip install navigator[batfish]; Docker image
+                    batfish  a Batfish service at HOST:PORT (pip install navigator-mcp[batfish]; Docker image
                              batfish/allinone). HOST must be a local or private address.
                     netclaw  the Batfish service NetClaw's batfish-mcp uses (its BATFISH_HOST / BATFISH_PORT)
   HOST, PORT      batfish / netclaw: the service (default 127.0.0.1, pybatfish's default port)
@@ -148,7 +148,7 @@ class BatfishValidator:
         try:
             from pybatfish.client.session import Session
         except ImportError:
-            raise Unreachable("pybatfish is not installed (pip install navigator[batfish])") from None
+            raise Unreachable("pybatfish is not installed (pip install navigator-mcp[batfish])") from None
         try:
             return Session(host=self.host, **({"port": self.port} if self.port else {}))
         except Exception as e:  # noqa: BLE001 - any connection problem

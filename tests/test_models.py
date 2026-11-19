@@ -73,7 +73,7 @@ def test_read_files_stays_in_the_project(tmp_path):
     assert used == ["RAW/a.log", "RAW/b.log"] and "MAX_INPUT_CHARS" in text
     with pytest.raises(models.ModelError, match="outside the project"):
         models.read_files(p, ["../../etc/passwd"], 1000)
-    with pytest.raises(models.ModelError, match="no such file"):
+    with pytest.raises(models.ModelError, match="not in the project"):
         models.read_files(p, ["NOPE"], 1000)
 
 

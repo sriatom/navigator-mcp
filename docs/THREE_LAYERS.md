@@ -46,10 +46,12 @@ or a change goes through these steps first:
 
 - **One server, 16 tools**, each with an `action`. The full table is in ../README.md (section "NAVIGATOR tools").
 - **Nine roles** as briefs for subagents: Analyzer, Config generator, Config push, Data collect, State validator, Log reviewer, Documentor, Sanity QC and **Ship engineer**, who keeps the inventories and connections working and troubleshoots the automation itself.
-- **Projects** are CLOUD or LOCAL, with a task file, a run log and records.
+- **Projects** are folders (not inventories), CLOUD or LOCAL, with a task file, a run log and records.
+  `project action=search` finds text such as `vlan 3102` in every file of a project and returns the config
+  block around each hit, with no model and no size limit on the files.
 - **Scrambler:** removes secrets (or also IPs, ASNs and names) before anything goes to a public model, and puts the real names back afterwards.
 - **Web research** through self-hosted SearXNG: free, no API key, every query logged.
-- **Model:** NAVIGATOR has none; it uses the host agent's model. The chat model is CLOUD or LOCAL (on Hermes per thread: `/model cloud`, `/model local`; default LOCAL). For a LOCAL project on a cloud model, `local_model` lets a local OpenAI-compatible model (Ollama…) read the files and writes its answer to the project's `OUT/`; the cloud model gets only the file name. NAVIGATOR's own setting is `MODELS.HOST` ([LOCAL_MODELS.md](LOCAL_MODELS.md)).
+- **Model:** NAVIGATOR has none; it uses the host agent's model. The chat model is CLOUD or LOCAL (on Hermes per thread: `/model cloud`, `/model local`; default LOCAL). For a LOCAL project on a cloud model, `local_model` lets a local OpenAI-compatible model (Ollama…) read the files (all of them by default, or only the blocks a `search=` finds) and writes its answer to the project's `OUT/`; the cloud model gets only the file name. NAVIGATOR's own setting is `MODELS.HOST` ([LOCAL_MODELS.md](LOCAL_MODELS.md)).
 - **State:** plain files, no database: tickets and the audit log in RUDDER's state folder, the job's history in its project folder, lessons in one file (../design/STATE_AND_MEMORY.md).
 
 ## A real case: pyATS on an SD-WAN edge

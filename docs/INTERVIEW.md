@@ -150,7 +150,7 @@ No Batfish yet? Start one on the host and install the client:
 
 ```bash
 docker run -d --name batfish --restart unless-stopped -p 127.0.0.1:9996:9996 batfish/allinone
-~/navigator/.venv/bin/pip install "navigator[batfish]"
+~/navigator/.venv/bin/pip install "navigator-mcp[batfish]"
 ```
 
 The settings are saved only after a **test snapshot gets an answer** from the validator. A fail before the push

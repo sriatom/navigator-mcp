@@ -1,5 +1,5 @@
 [project]
-name = "navigator"
+name = "navigator-mcp"
 version = "0.3.0"
 license = {text = "Apache-2.0"}
 description = "ATLAS (inventory + credentials), layer 1 of ATLAS / RUDDER / NAVIGATOR, as an MCP server"

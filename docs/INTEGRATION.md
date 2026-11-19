@@ -14,15 +14,12 @@ copied as it is. Lines that start with `#` are notes.
 
 ## 1. Install NAVIGATOR on the host
 
-Set the address of the NAVIGATOR repository you were given, then copy the rest:
-
-```bash
-export NAVIGATOR_REPO=<the git URL of the navigator repository>
-```
+The code is on GitHub: [sriatom/navigator-mcp](https://github.com/sriatom/navigator-mcp) (Apache-2.0).
+The Python package is `navigator-mcp`; the commands keep their names (`navigator-setup`, `navigator-mcp`, …).
 
 ```bash
 sudo apt-get install -y python3-venv git
-git clone "$NAVIGATOR_REPO" ~/navigator
+git clone https://github.com/sriatom/navigator-mcp.git ~/navigator
 cd ~/navigator
 python3 -m venv .venv
 .venv/bin/pip install --upgrade pip setuptools wheel

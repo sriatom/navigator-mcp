@@ -206,6 +206,9 @@ Every platform belongs to a vendor pack ([ROLES_AND_PACKS.md](ROLES_AND_PACKS.md
 | :--- | :--- |
 | "new LOCAL project ACME_BGP: check BGP on the QA fabric" | `project action=create` (mode, description, inventory) |
 | "list projects" / "show ACME_BGP" | `project action=list / show` |
+| "which files are in DEMO2?" | `project action=files` (sizes; LOCAL on a cloud model: folder counts only) |
+| "Project DEMO2: which device has VLAN 3102 and its IP addresses?" | `project action=search search="vlan 3102"`: the config block around each hit, from every file, no model (`vlan 3102` also finds `Vlan3102`; `regex=true` for a regex) |
+| (LOCAL project, cloud chat model) "… answer it with the local model" | `local_model action=ask search="vlan 3102"`: the local model reads only the matching blocks; the search alone returns counts |
 | "mark ACME_BGP blocked: waiting for the maintenance window" | `project action=status` (writes NAVIGATOR_STATE.json) |
 | "switch ACME_BGP to CLOUD" | `mode action=set` → `/pushok` on the approval bot (to LOCAL is immediate) |
 | "brief a STATE_VALIDATOR for this" | `role action=brief` |

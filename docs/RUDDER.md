@@ -103,7 +103,7 @@ device back. `VALIDATION.POST_PUSH false` turns this second check off.
 on with a warning. The configs go only to the validator on your own network, never through the chat model, so
 this works for LOCAL projects too.
 
-Install: `pip install "navigator[batfish]"` for the Batfish client.
+Install: `pip install "navigator-mcp[batfish]"` for the Batfish client.
 
 ## When the device refuses a line
 
