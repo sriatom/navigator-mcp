@@ -103,7 +103,7 @@ instead.
 
 <p class="nv-sub">Your agent runs the model. NAVIGATOR checks every call before it reaches your network.</p>
 
-![How NAVIGATOR fits with your agent](front-door.svg){ .nv-figure }
+![How NAVIGATOR fits with your agent](front-door.svg#only-light){ .nv-figure }![How NAVIGATOR fits with your agent](front-door-dark.svg#only-dark){ .nv-figure }
 
 <div class="nv-grid nv-grid--3" markdown>
 

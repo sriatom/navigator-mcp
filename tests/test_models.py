@@ -69,8 +69,8 @@ def test_read_files_stays_in_the_project(tmp_path):
     (p / "RAW").mkdir(parents=True)
     (p / "RAW" / "a.log").write_text("x" * 50)
     (p / "RAW" / "b.log").write_text("y" * 50)
-    text, used = models.read_files(p, None, 110)
-    assert used == ["RAW/a.log", "RAW/b.log"] and "MAX_INPUT_CHARS" in text
+    text, used, left = models.read_files(p, None, 110)
+    assert left == ["RAW/b.log (cut)"] and used == ["RAW/a.log", "RAW/b.log"] and "MAX_INPUT_CHARS" in text
     with pytest.raises(models.ModelError, match="outside the project"):
         models.read_files(p, ["../../etc/passwd"], 1000)
     with pytest.raises(models.ModelError, match="not in the project"):

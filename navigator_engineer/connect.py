@@ -96,7 +96,7 @@ def add_server(text: str, command: str, env: dict) -> tuple[str, bool]:
         return text, False
     block = [f"  {SERVER}:", f"    command: {command}", "    env:"]
     block += [f"      {k}: {json.dumps(str(v))}" for k, v in env.items()]
-    block += ["    connect_timeout: 60", "    enabled: true"]
+    block += ["    connect_timeout: 60", "    timeout: 900", "    enabled: true"]   # > MODELS.LOCAL.TIMEOUT_SEC
     lines = text.splitlines()
     i = _top(lines, "mcp_servers")
     if i is None:

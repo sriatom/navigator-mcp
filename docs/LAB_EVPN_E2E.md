@@ -5,7 +5,7 @@ and reaches the "internet", a firewall per fabric, and service nodes that act as
 
 [:material-download: Download evpn_e2e.zip](downloads/evpn_e2e.zip){ .md-button .md-button--primary }
 
-![Arista EVPN Fabric topology](lab-evpn-e2e.svg)
+![Arista EVPN Fabric topology](lab-evpn-e2e.svg#only-light)![Arista EVPN Fabric topology](lab-evpn-e2e-dark.svg#only-dark)
 
 ## Start it
 

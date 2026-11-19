@@ -54,6 +54,9 @@ inventories, credentials and devices: never use a shell, scripts, SSH or files f
   NOT an inventory. Questions about its files (configs, logs, notes): project action=search with the text
   (e.g. "vlan 3102") returns the matching config blocks from every file; action=files lists the files. Do
   not read devices or ask for an inventory to answer from the project's files.
+- To write a file into a project (a config, a report): project action=save with name and text (it lands in
+  OUT/). Build a config from each device's own blocks (project action=search) and platform (the project's
+  notes): copy the commands that device's config already uses. If a tool returns an error, tell the user.
 - Speak in names (inventories, projects, devices), not file paths.
 - Roles: role action=brief gives a subagent its full brief (ANALYZER, CONFIG_GENERATOR, CONFIG_PUSHER,
   DATA_COLLECTOR, STATE_VALIDATOR, LOG_REVIEWER, DOCUMENTOR, SANITY_AGENT, SHIP_ENGINEER). Pass results through
@@ -584,7 +587,7 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
             ask: str | None = None, summary: str | None = None, actor: str | None = None,
             step: str | None = None, result: str | None = None, ticket_id: str | None = None,
             host_model: str | None = None, search: str | None = None, files: list[str] | None = None,
-            regex: bool = False):
+            regex: bool = False, name: str | None = None, text: str | None = None):
     """Project folders (a projects folder) for every job. A project is a folder, not an inventory.
     action:
       create  (mode CLOUD | LOCAL: default = the model you run on now, a project follows the model it was
@@ -600,8 +603,11 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
       search  project, search = the text to find, e.g. "vlan 3102" or "10.3.1.12" (+ files = folders or files,
               default every file; regex=true for a regex). Returns, per file, the config block around each
               match (e.g. "interface Vlan3102" with its ip address lines). Use it to answer questions about
-              the project's configs and logs: it reads every file on the host, however large."""
-    a = _act(action, ("create", "show", "list", "status", "close", "task", "files", "search"))
+              the project's configs and logs: it reads every file on the host, however large.
+      save    project, name = a file name (e.g. "BOS-93360A_vlan3102.txt"), text = the file's content: writes it
+              to the project's OUT/ folder (a new name if that file exists). Use it to write configs and
+              reports; local_model ask does not write your text, its answer file only records its answer."""
+    a = _act(action, ("create", "show", "list", "status", "close", "task", "files", "search", "save"))
     P = Projects(_s())
     if a == "create":
         _need(a, description=description)
@@ -613,6 +619,8 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
         return _call(P.show, project, host_kind(_s(), host_model))
     if a in ("files", "search"):
         return _project_files(a, project, search, files, regex, host_model)
+    if a == "save":
+        return _project_save(project, name, text, host_model)
     if a == "status":
         _need(a, status=status)
         return _call(P.status, project, status, phase, ask)
@@ -620,6 +628,17 @@ def project(action: str, project: str | None = None, mode: str | None = None, de
         return _call(P.status, project, "done", "closed", None, "project closed" + (f": {summary}" if summary else ""))
     _need(a, actor=actor, step=step, result=result)
     return _call(P.record, project, actor, step, result)
+
+
+def _project_save(project: str, name: str | None, text: str | None, host_model: str | None) -> dict:
+    _need("save", name=name, text=text)
+    sc = Scope(project, None, need_inventory=False, host_model=host_model)
+    if not sc.pdir:
+        raise ToolError(f"no project {project}")
+    res = _call(PF.save, sc.pdir, name, text)
+    sc.log("project save" + (" (name not logged: LOCAL)" if sc.hidden else f": {name}"),
+           f"{res['bytes']} bytes -> {res['saved']}")
+    return {"project": sc.project, "mode": sc.mode, **res}
 
 
 def _project_files(a: str, project: str, search: str | None, files: list[str] | None, regex: bool,
@@ -778,25 +797,39 @@ def local_model(action: str, project: str | None = None, task: str | None = None
     sc = Scope(project, None, need_inventory=False, host_model=host_model)
     if not sc.pdir:
         raise ToolError(f"no project {project}")
+    limit, left = int(lm.cfg["MAX_INPUT_CHARS"]), []
     if search:
-        found = _call(PF.search, sc.pdir, search, files, False, 200, int(lm.cfg["MAX_INPUT_CHARS"]))
+        nts = _call(PF.notes, sc.pdir)          # the device list etc.: which platform each device runs
+        head = "".join(f"===== {n} (project notes) =====\n{t}\n" for n, t in nts)
+        found = _call(PF.search, sc.pdir, search, files, False, 200, max(10000, limit - len(head)))
         if not found["blocks"]:
             raise ToolError(f"search {search!r}: no match in the project files; nothing to give the local model")
-        context = "".join(f"===== {b['file']} (line {b['line']}) =====\n{b['block']}\n" for b in found["blocks"])
-        used = sorted(found["files_with_matches"])
+        context = head + "".join(f"===== {b['file']} (line {b['line']}) =====\n{b['block']}\n"
+                                 for b in found["blocks"])
+        used = [n for n, _ in nts] + sorted(found["files_with_matches"])
     else:
-        context, used = _call(read_files, sc.pdir, files, int(lm.cfg["MAX_INPUT_CHARS"]))
+        context, used, left = _call(read_files, sc.pdir, files, limit)
+        if left and not files:
+            raise ToolError(
+                f"the project's files are larger than the local model's input limit (MAX_INPUT_CHARS {limit} "
+                f"chars): {len(used)} file(s) would fit and {len(left)} would be left out or cut, so the answer "
+                "would come from the wrong files. Ask again with search= (the text you need, e.g. \"Vlan3102\"; "
+                "the project's top-level notes are added) or files=[...] (the files to read).")
     res = _call(lm.chat, task, context)
     out_dir = sc.pdir / "OUT"
     out_dir.mkdir(exist_ok=True)
     out = out_dir / f"LOCAL_MODEL_{time.strftime('%Y%m%d-%H%M%S')}.md"
     out.write_text(f"# Local model answer ({res['model']}, {res['seconds']} s)\n\n## Task\n{task}\n\n"
-                   f"## Files\n" + "".join(f"- {u}\n" for u in used) + f"\n## Answer\n{res['text']}\n")
+                   f"## Files\n" + "".join(f"- {u}\n" for u in used)
+                   + ("\n## Left out (input limit)\n" + "".join(f"- {u}\n" for u in left) if left else "")
+                   + f"\n## Answer\n{res['text']}\n")
     hide = sc.hidden
     sc.log(f"local_model ask ({res['model']}): {'(task not logged: LOCAL)' if hide else task[:200]}",
            f"{len(res['text'])} chars -> OUT/{out.name}")
     reply = {"project": sc.project, "mode": sc.mode, "model": res["model"], "seconds": res["seconds"],
              "files_read": len(used), "answer_file": f"OUT/{out.name}", "answer_chars": len(res["text"])}
+    if left:
+        reply["left_out"] = len(left)
     if hide:
         reply["next"] = ("LOCAL project and a cloud host model: the answer stays in the project. Tell the user it "
                          f"is in OUT/{out.name}; do not open it yourself.")

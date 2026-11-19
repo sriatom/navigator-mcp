@@ -6,7 +6,7 @@ headquarters LAN on purpose. eBGP everywhere.
 
 [:material-download: Download palab1.zip](downloads/palab1.zip){ .md-button .md-button--primary }
 
-![palab1 topology](lab-palab1.svg)
+![palab1 topology](lab-palab1.svg#only-light)![palab1 topology](lab-palab1-dark.svg#only-dark)
 
 ## Start it
 

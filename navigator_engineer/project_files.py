@@ -73,6 +73,38 @@ def pick(pdir: Path, files: list[str] | None) -> list[Path]:
     return out
 
 
+def notes(pdir: Path, max_chars: int = 20000) -> list[tuple[str, str]]:
+    """The project's own top-level text files (e.g. a device list with each device's platform), each up to
+    max_chars: given to the local model with search results so it knows which platform each device runs."""
+    root = _root(pdir)
+    out = []
+    for p in _walk(root, root, named=False):
+        if len(p.relative_to(root).parts) == 1 and p.stat().st_size <= max_chars:
+            try:
+                out.append((p.name, p.read_text(errors="replace")))
+            except OSError:
+                pass
+    return out
+
+
+SAVE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._ -]{0,119}$")
+
+
+def save(pdir: Path, name: str, text: str) -> dict:
+    """Write text to OUT/<name>. Never overwrites: an existing name gets -1, -2, ... before the suffix."""
+    root = _root(pdir)
+    if not SAVE_NAME.match(name or "") or ".." in name:
+        raise ProjectFilesError(f"{name!r}: give a plain file name such as BOS-93360A_vlan3102.txt "
+                                "(letters, digits, . _ - and spaces; no folders)")
+    out = root / "OUT"
+    out.mkdir(exist_ok=True)
+    p, n = out / name, 1
+    while p.exists():
+        p, n = out / f"{Path(name).stem}-{n}{Path(name).suffix}", n + 1
+    p.write_text(text if text.endswith("\n") else text + "\n")
+    return {"saved": f"OUT/{p.name}", "bytes": p.stat().st_size}
+
+
 def listing(pdir: Path, files: list[str] | None = None, limit: int = 200) -> dict:
     root = _root(pdir)
     paths = pick(pdir, files)

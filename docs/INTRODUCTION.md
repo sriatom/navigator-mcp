@@ -43,7 +43,7 @@ NAVIGATOR puts **one front door** in front of all of them. Every call passes the
 
 ## A team of specialists, taught by vendor packs
 
-![NAVIGATOR roles and vendor packs](roles-and-packs.svg)
+![NAVIGATOR roles and vendor packs](roles-and-packs.svg#only-light)![NAVIGATOR roles and vendor packs](roles-and-packs-dark.svg#only-dark)
 
 You talk in plain words. The lead engineer (NAVIGATOR) hands the work to the right roles:
 
@@ -68,7 +68,7 @@ multivendor and a generic fallback ([Roles and vendor packs](ROLES_AND_PACKS.md)
 
 ## How it fits with your agent
 
-![How NAVIGATOR fits in](front-door.svg)
+![How NAVIGATOR fits in](front-door.svg#only-light)![How NAVIGATOR fits in](front-door-dark.svg#only-dark)
 
 1. **You talk where you already talk**: Slack, Telegram, Teams, Discord, or a terminal or IDE.
 2. **Your agent host** (Hermes, NetClaw, OpenClaw, Claude Code, Cursor…) runs the AI model and starts

@@ -94,7 +94,8 @@ def test_long_block_is_cut_near_the_hit(tmp_path):
 
 
 def test_local_model_reads_every_file_by_default(proj):
-    text, used = read_files(proj, None, 100000)
+    text, used, left = read_files(proj, None, 100000)
+    assert left == []
     assert len(used) == 2 and "OUT/old.md" not in used
     with pytest.raises(ModelError, match="RAW: not in the project. It has: CONFIG/"):
         read_files(proj, ["RAW"], 1000)

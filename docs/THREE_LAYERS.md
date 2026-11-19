@@ -1,6 +1,6 @@
 # NAVIGATOR: one front door for network-automation agents
 
-![NAVIGATOR architecture](three-layers.png)
+![NAVIGATOR architecture](three-layers.svg#only-light)![NAVIGATOR architecture](three-layers-dark.svg#only-dark)
 
 NAVIGATOR is an independent MCP server that lets any AI agent (on Hermes, OpenClaw, Claude or your own host)
 work with real network devices safely. The agent sees **one MCP server, NAVIGATOR**. Inside it run three layers, each depending only on the one below:
@@ -65,7 +65,7 @@ built on pyATS inherits that default login unless it sets these options.
 
 ## Roles and vendor packs
 
-![Roles and vendor packs](roles-and-packs.png)
+![Roles and vendor packs](roles-and-packs.svg#only-light)![Roles and vendor packs](roles-and-packs-dark.svg#only-dark)
 
 NAVIGATOR is organised two more ways ([ROLES_AND_PACKS.md](ROLES_AND_PACKS.md)):
 - **By job: nine roles** (sub-agents) the lead hands work to: DATA_COLLECTOR, STATE_VALIDATOR, LOG_REVIEWER,

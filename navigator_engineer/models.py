@@ -149,30 +149,34 @@ class LocalModel:
                 "usage": d.get("usage") or {}}
 
 
-def read_files(pdir: Path, files: list[str] | None, limit: int) -> tuple[str, list[str]]:
+def read_files(pdir: Path, files: list[str] | None, limit: int) -> tuple[str, list[str], list[str]]:
     """Project files (relative to the project; default every project file but OUT/) as one text block,
-    capped at `limit` chars. A missing name lists what the project has."""
+    capped at `limit` chars: top-level files first (notes such as a device list), then the folders.
+    Returns (text, files read, files left out or cut). A missing name lists what the project has."""
     from . import project_files
     root = pdir.resolve()
     try:
         paths = project_files.pick(pdir, files)
     except project_files.ProjectFilesError as e:
         raise ModelError(str(e)) from None
-    parts, used, total = [], [], 0
+    paths = sorted(paths, key=lambda p: len(p.relative_to(root).parts) > 1)     # stable: top level first
+    parts, used, left, total = [], [], [], 0
     for p in paths:
+        rel = str(p.relative_to(root))
+        if total >= limit:
+            left.append(rel)
+            continue
         try:
             t = p.read_text(errors="replace")
         except OSError:
             continue
-        rel = str(p.relative_to(root))
         chunk = f"===== {rel} =====\n{t}\n"
         if total + len(chunk) > limit:
             chunk = chunk[: max(0, limit - total)] + "\n[... cut: MAX_INPUT_CHARS reached]\n"
+            left.append(f"{rel} (cut)")
         parts.append(chunk)
         used.append(rel)
         total += len(chunk)
-        if total >= limit:
-            break
     if not parts:
         raise ModelError("no readable files to give the local model")
-    return "".join(parts), used
+    return "".join(parts), used, left

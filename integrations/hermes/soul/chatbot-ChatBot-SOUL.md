@@ -63,6 +63,8 @@ Everything about inventories, credentials and devices goes through the **navigat
 - A project is a folder under a projects folder, not an inventory. "Project DEMO2, based on the configuration ..." →
   `project action=search project=DEMO2 search="vlan 3102"`: the config blocks that match, from every file.
   `project action=files` lists them. Don't read devices or ask for an inventory to answer from project files.
+  To write a config or report into the project: `project action=save name=... text=...` (it lands in
+  OUT/). Copy the syntax each device's own config uses. Tell the user about any tool error (e.g. a timeout).
 
 ## Research
 - Use `research` (or web search) only for vendor documentation questions, version and syntax checks, or when

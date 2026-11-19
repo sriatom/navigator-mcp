@@ -13,6 +13,7 @@
   --nv-muted: #5B6675;
   --nv-border-strong: #C5CEDA;
   --nv-btn: #0F2A44;
+  --nv-s1: #64748B; --nv-s2: #2563EB; --nv-s3: #F2A93B; --nv-s4: #9333EA; --nv-s5: #16A34A;
 }
 [data-md-color-scheme="slate"] {
   --md-primary-fg-color: #0F2A44;
@@ -24,6 +25,7 @@
   --nv-muted: #9AA7B6;
   --nv-border-strong: #3A4B60;
   --nv-btn: #2F9E91;
+  --nv-s1: #94A3B8; --nv-s2: #60A5FA; --nv-s3: #F2A93B; --nv-s4: #C084FC; --nv-s5: #4ADE80;
 }
 
 /* ---------- header */
@@ -134,14 +136,20 @@
 .md-typeset ol.nv-steps.nv-steps li {
   counter-increment: s; margin: 0 !important; position: relative;
   background: var(--md-default-bg-color); border: 1px solid var(--nv-border); border-radius: 10px;
-  padding: 2.2rem .9rem .9rem; font-size: .72rem; line-height: 1.5; color: var(--nv-muted);
+  border-top: 4px solid var(--nv-step); padding: 2.2rem .9rem .9rem; font-size: .72rem; line-height: 1.5; color: var(--nv-muted);
 }
 .md-typeset .nv-steps li::before {
   content: counter(s); position: absolute; top: .8rem; left: .9rem;
   width: 1.15rem; height: 1.15rem; border-radius: 50%; display: grid; place-items: center;
-  font-size: .62rem; font-weight: 700; color: #fff; background: var(--nv-navy);
+  font-size: .62rem; font-weight: 700; color: #fff; background: var(--nv-step);
 }
-.md-typeset .nv-steps li:nth-child(3)::before { background: var(--nv-amber); color: var(--nv-navy); }
+.md-typeset .nv-steps li:nth-child(1) { --nv-step: var(--nv-s1); }
+.md-typeset .nv-steps li:nth-child(2) { --nv-step: var(--nv-s2); }
+.md-typeset .nv-steps li:nth-child(3) { --nv-step: var(--nv-s3); }
+.md-typeset .nv-steps li:nth-child(4) { --nv-step: var(--nv-s4); }
+.md-typeset .nv-steps li:nth-child(5) { --nv-step: var(--nv-s5); }
+.md-typeset .nv-steps li:nth-child(3)::before { color: var(--nv-navy); }
+[data-md-color-scheme="slate"] .md-typeset .nv-steps li::before { color: var(--nv-navy); }
 .md-typeset .nv-steps li b { display: block; font-size: .85rem; color: var(--md-default-fg-color); margin-bottom: .2rem; }
 
 .md-typeset .nv-figure { display: block; margin: 0 auto; max-width: 900px; width: 100%; border: 1px solid var(--nv-border); }
