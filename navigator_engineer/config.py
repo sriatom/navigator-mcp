@@ -62,8 +62,18 @@ def _approval(raw: dict) -> dict:
         return {}
 
 
+def bootstrap_file() -> Path:
+    """$NAVIGATOR_BOOTSTRAP; the checkout's navigator.yml (source checkout only); else the user's file, which
+    navigator-setup writes (~/.config/navigator/navigator.yml; missing = the defaults)."""
+    if os.environ.get("NAVIGATOR_BOOTSTRAP"):
+        return Path(os.environ["NAVIGATOR_BOOTSTRAP"]).expanduser()
+    if (REPO / "pyproject.toml").is_file() and (REPO / "navigator.yml").is_file():
+        return REPO / "navigator.yml"
+    return Path("~/.config/navigator/navigator.yml").expanduser()
+
+
 def load() -> Settings:
-    boot = Path(os.environ.get("NAVIGATOR_BOOTSTRAP") or REPO / "navigator.yml")
+    boot = bootstrap_file()
     raw = (yaml.safe_load(boot.read_text()) or {}) if boot.is_file() else {}
     maps = raw.get("SCRAMBLER_MAPS")
     skills = []

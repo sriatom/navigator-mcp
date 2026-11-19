@@ -69,8 +69,18 @@ def _merge(base: dict, local: dict) -> dict:
     return out
 
 
+def bootstrap_file() -> Path:
+    """$RUDDER_BOOTSTRAP; the checkout's rudder.yml (source checkout only); else ~/.config/rudder/rudder.yml
+    (missing = the defaults). rudder.local.yml is merged on top either way (see _local_file)."""
+    if os.environ.get("RUDDER_BOOTSTRAP"):
+        return Path(os.environ["RUDDER_BOOTSTRAP"]).expanduser()
+    if (REPO / "pyproject.toml").is_file() and (REPO / "rudder.yml").is_file():
+        return REPO / "rudder.yml"
+    return Path("~/.config/rudder/rudder.yml").expanduser()
+
+
 def load() -> Settings:
-    boot = Path(os.environ.get("RUDDER_BOOTSTRAP") or REPO / "rudder.yml")
+    boot = bootstrap_file()
     raw = (yaml.safe_load(boot.read_text()) or {}) if boot.is_file() else {}
     local = _local_file()
     if local and local.is_file():

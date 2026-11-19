@@ -1,6 +1,7 @@
 """Paths and settings for ATLAS, read from bootstrap.yml (paths and names only, no secrets).
 
-Lookup order for the bootstrap file: $ATLAS_BOOTSTRAP, then bootstrap.yml next to the repo root.
+Lookup order for the bootstrap file: $ATLAS_BOOTSTRAP; bootstrap.yml at the repo root (a source checkout);
+~/.config/atlas/bootstrap.yml; else the defaults below (a pip install with no settings yet).
 Environment overrides: ATLAS_MODE, ATLAS_CONSUMER. The older NAVI_* names are still accepted.
 """
 from __future__ import annotations
@@ -14,6 +15,8 @@ import yaml
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_KEY_FILE = "~/.config/atlas/vault.key"
 DEFAULT_STATE_PATH = "~/.atlas"
+DEFAULT_DATA_PATH = "~/.atlas/data"          # inventories + CREDENTIALS.yml
+USER_BOOTSTRAP = "~/.config/atlas/bootstrap.yml"
 
 
 def env(name: str) -> str | None:
@@ -69,10 +72,21 @@ def raw_bootstrap(cfg: Config) -> dict:
     return (yaml.safe_load(cfg.bootstrap.read_text()) or {}) if cfg.bootstrap else {}
 
 
+def bootstrap_file() -> Path | None:
+    """$ATLAS_BOOTSTRAP (must exist), else the first that exists: the checkout's bootstrap.yml, the user's."""
+    if env("BOOTSTRAP"):
+        return Path(env("BOOTSTRAP")).expanduser()
+    for p in ((REPO / "bootstrap.yml") if (REPO / "pyproject.toml").is_file() else None,
+              Path(USER_BOOTSTRAP).expanduser()):
+        if p and p.is_file():
+            return p
+    return None
+
+
 def load() -> Config:
-    boot = Path(env("BOOTSTRAP") or REPO / "bootstrap.yml")
-    raw = yaml.safe_load(boot.read_text()) or {}
-    data = _path(raw["DATA_PATH"])
+    boot = bootstrap_file()
+    raw = (yaml.safe_load(boot.read_text()) or {}) if boot else {}
+    data = _path(raw.get("DATA_PATH") or DEFAULT_DATA_PATH)
     mode = (env("MODE") or str(raw.get("MODE", "OPEN"))).upper()
     if mode not in ("OPEN", "LOCKED"):
         raise ValueError(f"ATLAS_MODE must be OPEN or LOCKED, not {mode!r}")
