@@ -53,6 +53,7 @@ def test_hermes_on_an_existing_profile_keeps_everything_else(hermes_home):
     assert d["plugins"]["enabled"] == ["navigator-guard", "navigator-reply", "navigator-qc"]
     assert d["display"] == {"compact": True} and "# keep this comment" in text
     assert (pdir / "plugins" / "navigator-qc" / "__init__.py").is_file()
+    assert (pdir / "plugins" / "navigator-guard" / "__init__.py").is_file()
     assert (pdir / "SOUL.md").read_text() == "my own soul\n" and (pdir / "SOUL.navigator.md").is_file()
     assert list(pdir.glob("config.yaml.bak-*")) and seen == ["navigator"]
     assert any("other MCP servers" in x for x in out)
@@ -67,7 +68,10 @@ def test_hermes_on_an_empty_profile_and_the_approval_bot(hermes_home):
     (hermes_home / "profiles" / "approvals").mkdir(parents=True)
     out, _ = _run(approvals="approvals")
     d = yaml.safe_load((hermes_home / "profiles/navigator/config.yaml").read_text())
-    assert d["plugins"]["enabled"] == ["navigator-reply", "navigator-qc"] and "navigator" in d["mcp_servers"]
+    assert d["plugins"]["enabled"] == ["navigator-guard", "navigator-reply", "navigator-qc"]
+    assert "navigator" in d["mcp_servers"]
+    g = json.loads((hermes_home / "profiles/navigator/navigator-guard.json").read_text())
+    assert g["always_local"] is False and g["navigator_bootstrap"].endswith("navigator.yml")
     assert "STRICT" in (hermes_home / "profiles/navigator/SOUL.md").read_text() or \
         (hermes_home / "profiles/navigator/SOUL.md").stat().st_size > 1000
     a = yaml.safe_load((hermes_home / "profiles/approvals/config.yaml").read_text())
@@ -82,7 +86,8 @@ def test_inline_empty_sections(hermes_home, cfg):
     p.write_text(cfg)
     _run()
     d = yaml.safe_load(p.read_text())
-    assert "navigator" in d["mcp_servers"] and d["plugins"]["enabled"] == ["navigator-reply", "navigator-qc"]
+    assert "navigator" in d["mcp_servers"]
+    assert d["plugins"]["enabled"] == ["navigator-guard", "navigator-reply", "navigator-qc"]
 
 
 def test_no_hermes_no_profile(hermes_home, monkeypatch):

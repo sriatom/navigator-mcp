@@ -1,0 +1,4 @@
+name: navigator-guard
+version: 2.0.0
+description: "Keeps NAVIGATOR's private data and LOCAL projects away from cloud models and the internet; settings from NAVIGATOR's own files."
+author: "NAVIGATOR"

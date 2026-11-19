@@ -4,8 +4,8 @@
     navigator-setup connect cursor [--ssh-host user@host] [--write]
     navigator-setup connect claude [--ssh-host user@host]
 
-hermes   on this host: makes the chat profile if Hermes has none by that name, copies the navigator-reply and
-         navigator-qc plugins and the chat SOUL, adds `navigator` to mcp_servers and the plugins to
+hermes   on this host: makes the chat profile if Hermes has none by that name, copies the navigator-guard,
+         navigator-reply and navigator-qc plugins (+ navigator-guard.json) and the chat SOUL, adds `navigator` to mcp_servers and the plugins to
          plugins.enabled (config.yaml is backed up first), lets the profile post results back
          (APPROVAL.REPLY_PROFILES), and restarts the gateway if it runs. --approvals NAME also makes the
          approval bot's profile (push-approve plugin and its SOUL). Slack / Telegram tokens stay a manual step.
@@ -31,7 +31,7 @@ from pathlib import Path
 import yaml
 
 SERVER = "navigator"
-CHAT_PLUGINS = ("navigator-reply", "navigator-qc")
+CHAT_PLUGINS = ("navigator-guard", "navigator-reply", "navigator-qc")
 CHAT_SOUL = "chatbot-ChatBot-SOUL.md"            # its public name; the private repo calls it chatbot-ChatBot-SOUL.md
 APPROVAL_SOUL = "navi-approval-bot-SOUL.md"
 
@@ -221,6 +221,7 @@ def hermes(profile: str = "navigator", approvals: str | None = None, no_restart:
     for p in CHAT_PLUGINS:
         _copy_plugin(src, pdir, p, out)
     _place_soul(_soul(src, CHAT_SOUL), pdir, created, out)
+    _guard_settings(pdir, out)
     cfg = pdir / "config.yaml"
     text = cfg.read_text() if cfg.exists() else ""
     cmd = str(_bin("navigator-mcp"))
@@ -259,6 +260,21 @@ def hermes(profile: str = "navigator", approvals: str | None = None, no_restart:
             f"{approvals or '<profile>'} APPROVAL.METHOD slack|telegram ...",
             "  steps 3, 4 and 6 of 'Hermes, step by step' on the Install page say how."]
     return out
+
+
+def _guard_settings(pdir: Path, out: list[str]) -> None:
+    """navigator-guard.json: turns the guard on and names this install's settings files (kept if present)."""
+    f = pdir / "navigator-guard.json"
+    if f.exists():
+        return
+    from atlas_inventory import config as aconfig
+    from rudder_devices import config as rconfig
+    boot = aconfig.bootstrap_file()
+    d = {"always_local": False, "navigator_bootstrap": str(bootstrap()), "rudder_bootstrap": str(rconfig.bootstrap_file())}
+    if boot:
+        d["atlas_bootstrap"] = str(boot)
+    f.write_text(json.dumps(d, indent=2) + "\n")
+    out.append("navigator-guard.json: the guard is on (private paths, LOCAL projects, web queries)")
 
 
 def _reply_profiles(profile: str, out: list[str]) -> None:

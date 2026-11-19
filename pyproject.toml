@@ -1,6 +1,6 @@
 [project]
 name = "navigator-mcp"
-version = "0.3.1"
+version = "0.3.2"
 license = {text = "Apache-2.0"}
 description = "NAVIGATOR: MCP servers for network engineers: inventory and credentials (ATLAS), device reads and approved changes (RUDDER), projects, roles and QC (NAVIGATOR)"
 readme = "README.md"
